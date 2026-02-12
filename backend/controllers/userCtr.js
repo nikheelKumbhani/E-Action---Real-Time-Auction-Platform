@@ -20,7 +20,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const userExits = await User.findOne({ email });
   if (userExits) {
     res.status(400);
-    throw new Error("Email is already exit");
+    throw new Error("Email already exists");
   }
 
   const user = await User.create({

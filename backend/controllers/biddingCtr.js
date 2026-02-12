@@ -51,20 +51,21 @@ const placeBid = asyncHandler(async (req, res) => {
     // Get highest bid for bid amount validation
     const highestBid = await BiddingProduct.findOne({ product: finalProductId }).sort({ price: -1 });
 
-    // If this is the first bid, check if it's at least 10% higher than product price
+    // Consistent 5% minimum increase for all bids
     if (!highestBid) {
-      const minimumFirstBid = product.basePrice * 1.1; // 10% higher than base price
+      // First bid must be at least 5% higher than base price
+      const minimumFirstBid = product.basePrice * 1.05;
       if (price < minimumFirstBid) {
         return res.status(400).json({
-          message: `First bid must be at least 10% higher than product price. Minimum bid required: ${minimumFirstBid}`
+          message: `First bid must be at least 5% higher than product price. Minimum bid required: ${minimumFirstBid.toFixed(2)}`
         });
       }
     } else {
-      // If not first bid, check if it's at least 2% higher than current highest bid
-      const minimumNextBid = highestBid.price * 1.02; // 2% higher than current highest bid
+      // Subsequent bids must be at least 5% higher than current highest bid
+      const minimumNextBid = highestBid.price * 1.05;
       if (price <= minimumNextBid) {
         return res.status(400).json({
-          message: `New bid must be at least 2% higher than current highest bid. Minimum bid required: ${minimumNextBid}`
+          message: `New bid must be at least 5% higher than current highest bid. Minimum bid required: ${minimumNextBid.toFixed(2)}`
         });
       }
     }

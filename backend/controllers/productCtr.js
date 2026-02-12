@@ -332,39 +332,6 @@ const deleteProductsByAmdin = asyncHandler(async (req, res) => {
   }
 });
 
-const sellProduct = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const product = await Product.findById(id);
-  if (!product) {
-    res.status(404);
-    throw new Error("Product not found");
-  }
-
-  // Get highest bid for the product
-  const highestBid = await BiddingProduct.findOne({ product: id })
-    .sort('-price')
-    .populate('user');
-
-  if (!highestBid) {
-    res.status(400);
-    throw new Error("No bids found for this product");
-  }
-
-  // Update product status
-  product.isSoldout = true;
-  product.soldTo = highestBid.user._id;
-  product.soldPrice = highestBid.price;
-  product.soldAt = new Date();
-
-  await product.save();
-
-  res.status(200).json({
-    success: true,
-    message: "Product sold successfully",
-    data: product
-  });
-});
 
 module.exports = {
   createProduct,
@@ -378,5 +345,5 @@ module.exports = {
   deleteProductsByAmdin,
   getAllSoldProducts,
   getAllProductsofUser,
-  sellProduct,
+
 };
