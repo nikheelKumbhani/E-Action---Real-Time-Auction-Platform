@@ -4,7 +4,13 @@ const User = require("../model/userModel");
 
 const protect = expressAsyncHandler(async (req, res, next) => {
   try {
-    const token = req.cookies.token;
+    let token = req.cookies.token;
+
+    // Check Authorization header specifically for Bearer token
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
     if (!token) {
       res.status(401);
       throw new Error("Not authorized, Please Login");

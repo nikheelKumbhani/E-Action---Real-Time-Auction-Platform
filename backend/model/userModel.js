@@ -14,6 +14,10 @@ const transactionSchema = new mongoose.Schema({
   date: {
     type: Date,
     default: Date.now
+  },
+  description: {
+    type: String,
+    default: ''
   }
 });
 
@@ -21,23 +25,23 @@ const userSchema = mongoose.Schema(
   {
     name: {
       type: String,
-      require: [true, "Please add a name"],
+      required: [true, "Please add a name"],
     },
     email: {
       type: String,
-      require: [true, "Please add a email"],
+      required: [true, "Please add a email"],
       unique: true,
       trim: true,
       match: [/^\s*[\w\-\+_]+(\.[\w\-\+_]+)*\@[\w\-\+_]+\.[\w\-\+_]+(\.[\w\-\+_]+)*\s*$/, "Please enter a valid email"],
     },
     password: {
       type: String,
-      require: [true, "Please add a password"],
+      required: [true, "Please add a password"],
       minLength: [8, "Password must be up to 8 characters"],
     },
     photo: {
       type: String,
-      require: [true, "Please add a photo"],
+      required: [true, "Please add a photo"],
       default: "https://cdn-icons-png.flaticon.com/512/2202/2202112.png",
     },
     role: {

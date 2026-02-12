@@ -8,16 +8,13 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 };
 
-const nik = asyncHandler(async (req, res) => {
-  res.send("nikheel");
-})
 
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
     res.status(400);
-    throw new Error("Please fill in all required fileds");
+    throw new Error("Please fill in all required fields");
   }
 
   const userExits = await User.findOne({ email });
@@ -37,8 +34,8 @@ const registerUser = asyncHandler(async (req, res) => {
     path: "/",
     httpOnly: true,
     expires: new Date(Date.now() + 1000 * 86400), // 1 day
-    sameSite: "none",
-    secure: true,
+    sameSite: "lax",
+    secure: false,
   });
 
   if (user) {
@@ -52,7 +49,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   console.log("loginUser");
-  
+
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -65,18 +62,18 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new Error("User not found, Please signUp");
   }
 
-  const passwordIsCorrrect = await bcrypt.compare(password, user.password);
+  const passwordIsCorrect = await bcrypt.compare(password, user.password);
 
   const token = generateToken(user._id);
   res.cookie("token", token, {
     path: "/",
     httpOnly: true,
     expires: new Date(Date.now() + 1000 * 86400), // 1 day
-    sameSite: "none",
-    secure: true,
+    sameSite: "lax",
+    secure: false,
   });
 
-  if (user && passwordIsCorrrect) {
+  if (user && passwordIsCorrect) {
     const { _id, name, email, photo, role } = user;
     res.status(201).json({ _id, name, email, photo, role, token });
   } else {
@@ -86,15 +83,27 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const loginStatus = asyncHandler(async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) {
+  try {
+    let token = req.cookies.token;
+
+    // Check Authorization header specifically for Bearer token
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
+    if (!token) {
+      return res.json(false);
+    }
+
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    if (verified) {
+      return res.json(true);
+    }
+    return res.json(false);
+  } catch (error) {
+    // Token is invalid or expired
     return res.json(false);
   }
-  const verified = jwt.verify(token, process.env.JWT_SECRET);
-  if (verified) {
-    return res.json(true);
-  }
-  return res.json(false);
 });
 
 const getUser = asyncHandler(async (req, res) => {
@@ -108,8 +117,8 @@ const logoutUser = asyncHandler(async (req, res) => {
     path: "/",
     httpOnly: true,
     expires: new Date(0),
-    sameSite: "none",
-    secure: true,
+    sameSite: "lax",
+    secure: false,
   });
   return res.status(200).json({ message: "Successfully Logged Out" });
 });
@@ -183,8 +192,8 @@ const loginAsSeller = asyncHandler(async (req, res) => {
     path: "/",
     httpOnly: true,
     expires: new Date(Date.now() + 1000 * 86400),
-    sameSite: "none",
-    secure: true,
+    sameSite: "lax",
+    secure: false,
   });
 
   // Send the response with updated user info
@@ -193,7 +202,7 @@ const loginAsSeller = asyncHandler(async (req, res) => {
 });
 
 const getUserBalance = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user._id);
 
   if (!user) {
     res.status(404);
@@ -224,7 +233,7 @@ const estimateIncome = asyncHandler(async (req, res) => {
     }
     // Calculate total balance including commission
     const totalBalance = admin.balance + admin.commissionBalance;
-    res.status(200).json({ 
+    res.status(200).json({
       balance: admin.balance,
       commissionBalance: admin.commissionBalance,
       totalBalance: totalBalance
@@ -237,7 +246,7 @@ const estimateIncome = asyncHandler(async (req, res) => {
 
 const deposit = asyncHandler(async (req, res) => {
   const { amount } = req.body;
-  
+
   if (!amount || amount <= 0) {
     res.status(400);
     throw new Error("Please provide a valid amount");
@@ -264,7 +273,7 @@ const deposit = asyncHandler(async (req, res) => {
 
 const withdraw = asyncHandler(async (req, res) => {
   const { amount } = req.body;
-  
+
   if (!amount || amount <= 0) {
     res.status(400);
     throw new Error("Please provide a valid amount");
@@ -308,7 +317,7 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 const getUserById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  
+
   const user = await User.findById(id).select("-password -transactions -balance -commissionBalance");
   if (!user) {
     res.status(404);
@@ -328,7 +337,7 @@ module.exports = {
   getUser,
   getUserBalance,
   getAllUser,
-  nik,
+
   deposit,
   withdraw,
   deleteUser,

@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { registerUser, nik, loginUser, loginStatus, logoutUser, loginAsSeller, estimateIncome, getUser, getUserBalance, getAllUser, deposit, withdraw, deleteUser, getUserById } = require("../controllers/userCtr");
+const { registerUser, loginUser, loginStatus, logoutUser, loginAsSeller, estimateIncome, getUser, getUserBalance, getAllUser, deposit, withdraw, deleteUser, getUserById } = require("../controllers/userCtr");
 const { protect, isAdmin } = require("../middleWare/authMiddleWare");
 
 
-router.get("/nik", nik)
+
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/loggedin", loginStatus);

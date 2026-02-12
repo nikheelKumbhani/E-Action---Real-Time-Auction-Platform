@@ -13,8 +13,8 @@ const createProduct = asyncHandler(async (req, res) => {
     category,
     bidEndDate,
   } = req.body;
-  
-  const userId = req.user.id;
+
+  const userId = req.user._id;
 
   // Get category name
   const categoryDoc = await Category.findById(category);
@@ -132,7 +132,7 @@ const getAllProductsofUser = asyncHandler(async (req, res) => {
       const latestBid = await BiddingProduct.findOne({ product: product._id }).sort("-createdAt");
       const totalBids = await BiddingProduct.countDocuments({ product: product._id });
       const biddingPrice = latestBid ? latestBid.price : product.price;
-      
+
       return {
         ...product._doc,
         biddingPrice,
@@ -148,7 +148,7 @@ const getWonProducts = asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
   // console.log(userId);
-  
+
 
   const wonProducts = await Product.find({ soldTo: userId }).sort("-createdAt").populate("user");
 
@@ -187,7 +187,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Product not found");
   }
-  if (product.user?.toString() !== req.user.id) {
+  if (product.user?.toString() !== req.user._id.toString()) {
     res.status(401);
     throw new Error("User not authorized");
   }
@@ -214,7 +214,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     throw new Error("Product not found");
   }
 
-  if (product.user.toString() !== req.user.id) {
+  if (product.user.toString() !== req.user._id.toString()) {
     res.status(401);
     throw new Error("User not authorized");
   }
@@ -295,10 +295,10 @@ const verifyAndAddCommissionProductByAmdin = asyncHandler(async (req, res) => {
 
   await product.save();
 
-  res.status(200).json({ 
+  res.status(200).json({
     success: true,
-    message: "Product updated successfully", 
-    data: product 
+    message: "Product updated successfully",
+    data: product
   });
 });
 

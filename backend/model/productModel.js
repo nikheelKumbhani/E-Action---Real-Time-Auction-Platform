@@ -77,9 +77,15 @@ const productSchema = mongoose.Schema(
       type: Boolean,
       default: false
     },
-    soldTo: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "User" 
+    soldTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
+    soldPrice: {
+      type: Number
+    },
+    soldAt: {
+      type: Date
     },
     adminNotes: {
       type: String,
@@ -90,7 +96,7 @@ const productSchema = mongoose.Schema(
 );
 
 // Add a validation for maximum images
-productSchema.path('images').validate(function(images) {
+productSchema.path('images').validate(function (images) {
   return images.length <= 5;
 }, 'Maximum 5 images are allowed');
 

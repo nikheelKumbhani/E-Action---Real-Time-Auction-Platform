@@ -27,7 +27,7 @@ app.use(bodyParser.json());
 
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "http://192.168.56.1:3000"],
     credentials: true,
   })
 );
@@ -42,7 +42,7 @@ app.use("/api/category", categoryRoute);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Erro Middleware
+// Error Middleware
 app.use(errorHandler);
 
 // Routes
@@ -52,10 +52,7 @@ app.get("/", (req, res) => {
 
 //connect to mongoose
 mongoose
-  .connect(process.env.DATABASE_CLOUD, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.DATABASE_CLOUD)
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server Running on port ${PORT}`);
