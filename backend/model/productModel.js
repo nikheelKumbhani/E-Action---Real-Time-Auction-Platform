@@ -16,6 +16,7 @@ const productSchema = mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
     description: {
       type: String,
@@ -99,6 +100,12 @@ const productSchema = mongoose.Schema(
 productSchema.path('images').validate(function (images) {
   return images.length <= 5;
 }, 'Maximum 5 images are allowed');
+
+// Add indexes for frequently queried fields
+productSchema.index({ user: 1, createdAt: -1 });
+productSchema.index({ category: 1 });
+productSchema.index({ isPublished: 1, isSoldout: 1 });
+productSchema.index({ bidEndDate: 1 });
 
 const product = mongoose.model("Product", productSchema);
 module.exports = product;

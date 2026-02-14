@@ -11,11 +11,16 @@ const createCategory = asyncHandler(async (req, res) => {
     const category = await Category.create({
       user: req.user._id,
       title: req.body.title,
-      name: req.body.name || req.body.title, // Add name field
     });
 
     res.json(category);
   } catch (error) {
+    // Return validation errors to frontend
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      res.status(400).json({ message: errors.join(', ') });
+      return;
+    }
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -40,13 +45,12 @@ const getCategory = asyncHandler(async (req, res) => {
 const updateCategory = asyncHandler(async (req, res) => {
   const { id } = req.params;
   // console.log(id);
-  
+
   try {
     const categorie = await Category.findByIdAndUpdate(
       id,
       {
         title: req?.body?.title,
-        name: req?.body?.name || req?.body?.title,
       },
       {
         new: true,

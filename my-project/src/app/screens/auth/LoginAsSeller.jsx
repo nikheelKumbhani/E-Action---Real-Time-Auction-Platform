@@ -1,10 +1,10 @@
-import { FaFacebook, FaGoogle } from "react-icons/fa";
-import { Caption, Container, Loader, CustomNavLink, PrimaryButton, Title } from "../../router";
+  import { Caption, Container, Loader, CustomNavLink, PrimaryButton, Title } from "../../router";
 import { commonClassNameOfInput } from "../../components/common/Design";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { loginUserAsSeller, RESET } from "../../redux/features/authSlice";
+import { login, RESET } from "../../redux/features/authSlice";
+import { Gavel, Eye, EyeOff, Store } from "lucide-react";
 
 const initialState = {
   email: "",
@@ -12,20 +12,21 @@ const initialState = {
 };
 
 export const LoginAsSeller = () => {
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialState);
   const { email, password } = formData;
 
-
-  // Error state
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Get authentication state from Redux
   const { isLoading, isSuccess, user, isError, message } = useSelector((state) => state.auth);
 
   useEffect(() => {
+    if (isSuccess && user) {
+      navigate("/dashboard");
+    }
+
     return () => {
       dispatch(RESET());
     };
@@ -34,7 +35,6 @@ export const LoginAsSeller = () => {
   const validateForm = () => {
     let newErrors = {};
 
-    // Email Validation (must be correct format)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.trim()) {
       newErrors.email = "Email is required";
@@ -42,7 +42,6 @@ export const LoginAsSeller = () => {
       newErrors.email = "Invalid email format";
     }
 
-    // Password Validation (must be at least 8 characters)
     if (!password.trim()) {
       newErrors.password = "Password is required";
     } else if (password.length < 8) {
@@ -56,8 +55,6 @@ export const LoginAsSeller = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-
-    // Clear error when user starts typing
     setErrors({ ...errors, [name]: "" });
   };
 
@@ -65,95 +62,138 @@ export const LoginAsSeller = () => {
     e.preventDefault();
     if (validateForm()) {
       const userData = { email, password };
-      dispatch(loginUserAsSeller(userData));
-      navigate("/dashboard"); // Redirect after successful login
+      dispatch(login(userData));
     }
   };
-
 
   return (
     <>
       {typeof window !== "undefined" && isLoading && <Loader />}
-      <section className="regsiter pt-16 relative">
-        <div className="bg-green w-96 h-96 rounded-full opacity-20 blur-3xl absolute top-2/3"></div>
-        <div className="bg-[#241C37] pt-8 h-[40vh] relative content">
-          <Container>
-            <div>
-              <Title level={3} className="text-white">
-                Login Seller
-              </Title>
-              <div className="flex items-center gap-3">
-                <Title level={5} className="text-green font-normal text-xl">
-                  Home
-                </Title>
-                <Title level={5} className="text-white font-normal text-xl">
-                  /
-                </Title>
-                <Title level={5} className="text-white font-normal text-xl">
-                  Seller
-                </Title>
-              </div>
+      <section className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <div className="flex items-center gap-2">
+              <Gavel className="w-10 h-10 text-emerald-600" />
+              <span className="text-3xl font-bold text-gray-900">AuctionHub</span>
             </div>
-          </Container>
-        </div>
-        <form onSubmit={handleLogin} className="bg-white shadow-s3 w-1/3 m-auto my-16 p-8 rounded-xl">
+          </div>
+
+          {/* Header with Seller Badge */}
           <div className="text-center">
-            <Title level={5}>New Seller Member</Title>
-            <p className="mt-2 text-lg">
-              Do you already have an account? <CustomNavLink href="/create-account">Signup Here</CustomNavLink>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-full mb-4">
+              <Store className="w-5 h-5 text-emerald-600" />
+              <span className="text-sm font-semibold text-emerald-700">SELLER LOGIN</span>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900">Welcome Back, Seller</h2>
+            <p className="mt-2 text-gray-600">
+              Not a seller yet?{" "}
+              <CustomNavLink href="/create-account" className="text-emerald-600 font-medium hover:text-emerald-700">
+                Register as Seller
+              </CustomNavLink>
             </p>
           </div>
+        </div>
 
-          <div className="py-5 mt-8">
-            <Caption className="mb-2">Enter Your Email *</Caption>
-            <input
-              type="email"
-              value={email}
-              onChange={handleInputChange}
-              name="email"
-              className={commonClassNameOfInput}
-              placeholder="Enter Your Email"
-            />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-6 shadow-lg rounded-2xl border border-gray-200">
+            <form onSubmit={handleLogin} className="space-y-6">
+              {/* Email Field */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={email}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  placeholder="seller@example.com"
+                  required
+                />
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              </div>
 
-          </div>
-          <div>
-            <Caption className="mb-2">Password *</Caption>
-            <input
-              type="password"
-              value={password}
-              onChange={handleInputChange}
-              name="password"
-              className={commonClassNameOfInput}
-              placeholder="Enter Your Password"
-            />
-            {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+              {/* Password Field */}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    value={password}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all pr-12"
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              </div>
 
-          </div>
-          <div className="flex items-center gap-2 py-4">
-            <input type="checkbox" />
-            <Caption>I agree to the Terms & Policy</Caption>
-          </div>
-          <PrimaryButton className="w-full rounded-none my-5 uppercase">Become Seller</PrimaryButton>
-          <div className="text-center border py-4 rounded-lg mt-4">
-            <Title>OR SIGNIN WITH</Title>
-            <div className="flex items-center justify-center gap-5 mt-5">
-              <button className="flex items-center gap-2 bg-red-500 text-white p-3 px-5 rounded-sm">
-                <FaGoogle />
-                <p className="text-sm">SIGNIN WHIT GOOGLE</p>
+              {/* Forgot Password */}
+              <div className="text-right">
+                <CustomNavLink href="/forgot-password" className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
+                  Forgot password?
+                </CustomNavLink>
+              </div>
+
+              {/* Login Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Store className="w-5 h-5" />
+                {isLoading ? "Logging in..." : "Login to Seller Dashboard"}
               </button>
-              <button className="flex items-center gap-2 bg-indigo-500 text-white p-3 px-5 rounded-sm">
-                <FaFacebook />
-                <p className="text-sm">SIGNIN WHIT FACEBOOK</p>
-              </button>
-            </div>
+
+              {/* Divider */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-white text-gray-500">Or</span>
+                </div>
+              </div>
+
+              {/* Alternative Options */}
+              <div className="text-center space-y-2">
+                <p className="text-sm text-gray-600">
+                  Login as buyer?{" "}
+                  <CustomNavLink href="/login" className="text-emerald-600 font-medium hover:text-emerald-700">
+                    Regular Login
+                  </CustomNavLink>
+                </p>
+              </div>
+            </form>
           </div>
-          <p className="text-center mt-5">
-            By clicking the signup button, you create a Cobiro account, and you agree to Cobiros <span className="text-green underline">Terms & Conditions</span> &
-            <span className="text-green underline"> Privacy Policy </span> .
-          </p>
-        </form>
-        <div className="bg-green w-96 h-96 rounded-full opacity-20 blur-3xl absolute bottom-96 right-0"></div>
+
+          {/* Info Box */}
+          <div className="mt-6 bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+            <p className="text-sm text-emerald-800">
+              <strong>Seller Benefits:</strong> Manage your auctions, track bids, and access advanced seller tools.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer Note */}
+        <p className="mt-8 text-center text-sm text-gray-500 max-w-md mx-auto">
+          By signing in as a seller, you agree to our Seller Terms of Service
+        </p>
       </section>
     </>
   );

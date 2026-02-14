@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import authService from "../services/authFeatures";
 import { toast } from "react-toastify";
+import { clearRememberMe } from "../../utils/rememberMe";
 
 // ✅ Helper function to safely get user from localStorage
 const getUserFromLocalStorage = () => {
@@ -56,6 +57,7 @@ export const logOut = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
         await authService.logout();
         if (typeof window !== "undefined") {
             localStorage.removeItem("user"); // ✅ Clears user from localStorage
+            clearRememberMe(); // ✅ Clear remember me data
         }
         return null;
     } catch (error) {
@@ -184,6 +186,7 @@ const authSlice = createSlice({
             .addCase(register.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isSuccess = true;
+                state.isLoggedIn = true; // ✅ Fixed: Set isLoggedIn to true
                 state.user = action.payload;
             })
             .addCase(register.rejected, (state, action) => {
@@ -201,6 +204,7 @@ const authSlice = createSlice({
             .addCase(login.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isSuccess = true;
+                state.isLoggedIn = true; // ✅ Fixed: Set isLoggedIn to true
                 state.user = action.payload;
                 toast.success("Login Successful");
             })
@@ -281,6 +285,7 @@ const authSlice = createSlice({
             .addCase(loginUserAsSeller.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isSuccess = true;
+                state.isLoggedIn = true; // ✅ Fixed: Set isLoggedIn to true
                 state.user = action.payload;
                 state.isError = false;
                 toast.success("You are become a Seller.");

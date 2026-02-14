@@ -2,13 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Clock, AlertCircle, DollarSign, Loader2 } from "lucide-react"
-import { Button } from "@/app/components/ui/button"
-import { Input } from "@/app/components/ui/input"
-import { Card, CardContent } from "@/app/components/ui/card"
-import { Alert, AlertDescription } from "@/app/components/ui/alert"
-import { Separator } from "@/app/components/ui/separator"
-import { Badge } from "@/app/components/ui/badge"
+import { Clock, AlertCircle, Loader2, DollarSign } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { placeBid, getBiddingHistory } from "@/app/redux/features/beddingSlice"
 import { AppDispatch, RootState } from "@/app/redux/store"
@@ -188,7 +182,7 @@ export function AuctionDetails({ product, userBalance = 0 }: AuctionDetailsProps
       if (product._id) {
         void dispatch(getBiddingHistory(product._id));
       }
-      
+
       setBidStatus({
         message: "Bid placed successfully!",
         type: "success",
@@ -205,19 +199,19 @@ export function AuctionDetails({ product, userBalance = 0 }: AuctionDetailsProps
   const isAuctionEnded = product.bidEndDate ? new Date(product.bidEndDate) < new Date() : false
 
   // Calculate minimum bid amount for display
-  const minimumBidAmount = product.currentBid 
+  const minimumBidAmount = product.currentBid
     ? product.currentBid * 1.02  // 2% higher than current bid
     : (product.basePrice || 0) * 1.1; // 10% higher than base price
 
   return (
-    <Card>
-      <CardContent className="p-6 space-y-4">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+      <div className="p-6 space-y-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Auction Details</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Auction Details</h2>
           {!product.isPublished && (
-            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-emerald-100 text-emerald-700">
               Pending Verification
-            </Badge>
+            </span>
           )}
         </div>
 
@@ -225,80 +219,81 @@ export function AuctionDetails({ product, userBalance = 0 }: AuctionDetailsProps
           <div>
             <p className="text-sm text-gray-500">Base Price</p>
             <div className="flex items-center gap-2">
-              <p className="font-medium">${(product.basePrice || 0).toLocaleString()}</p>
+              <p className="font-medium text-gray-900">${(product.basePrice || 0).toLocaleString()}</p>
             </div>
           </div>
           <div>
             <p className="text-sm text-gray-500">Starting Bid</p>
             <div className="flex items-center gap-2">
-              <p className="font-medium">${(product.bidStartPrice || 0).toLocaleString()}</p>
+              <p className="font-medium text-gray-900">${(product.bidStartPrice || 0).toLocaleString()}</p>
             </div>
           </div>
           <div>
             <p className="text-sm text-gray-500">Commission on Sale</p>
-            <p className="font-medium">{product.commission || 0}%</p>
+            <p className="font-medium text-gray-900">{product.commission || 0}%</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Current Highest Bid</p>
             <div className="flex items-center gap-2">
-              <p className="font-bold text-lg text-primary">
-                ${(product.currentBid || 0).toLocaleString()}
+              <DollarSign className="h-5 w-5 text-emerald-600" />
+              <p className="font-bold text-lg text-emerald-600">
+                {(product.currentBid || 0).toLocaleString()}
               </p>
             </div>
           </div>
           <div>
             <p className="text-sm text-gray-500">Total Bids</p>
-            <p className="font-medium">{product.totalBids || 0}</p>
+            <p className="font-medium text-gray-900">{product.totalBids || 0}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Your Balance</p>
-            <p className="font-medium">${userBalance.toLocaleString()}</p>
+            <p className="font-medium text-gray-900">${userBalance.toLocaleString()}</p>
           </div>
         </div>
 
-        <Separator />
+        <div className="border-t border-gray-200 my-4"></div>
 
         {/* Countdown Timer */}
         <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="h-5 w-5 text-gray-500" />
-            <h3 className="font-medium">Time Left</h3>
+          <div className="flex items-center gap-2 mb-3">
+            <Clock className="h-5 w-5 text-emerald-600" />
+            <h3 className="font-medium text-gray-900">Time Left</h3>
           </div>
 
           {isAuctionEnded ? (
             <p className="text-red-500 font-semibold">Auction Ended</p>
           ) : (
             <div className="grid grid-cols-4 gap-2 text-center">
-              <div className="bg-white p-2 rounded shadow-sm">
-                <p className="text-2xl font-bold">{timeLeft.days}</p>
+              <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                <p className="text-2xl font-bold text-emerald-600">{timeLeft.days}</p>
                 <p className="text-xs text-gray-500">Days</p>
               </div>
-              <div className="bg-white p-2 rounded shadow-sm">
-                <p className="text-2xl font-bold">{timeLeft.hours}</p>
+              <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                <p className="text-2xl font-bold text-emerald-600">{timeLeft.hours}</p>
                 <p className="text-xs text-gray-500">Hours</p>
               </div>
-              <div className="bg-white p-2 rounded shadow-sm">
-                <p className="text-2xl font-bold">{timeLeft.minutes}</p>
+              <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                <p className="text-2xl font-bold text-emerald-600">{timeLeft.minutes}</p>
                 <p className="text-xs text-gray-500">Minutes</p>
               </div>
-              <div className="bg-white p-2 rounded shadow-sm">
-                <p className="text-2xl font-bold">{timeLeft.seconds}</p>
+              <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                <p className="text-2xl font-bold text-emerald-600">{timeLeft.seconds}</p>
                 <p className="text-xs text-gray-500">Seconds</p>
               </div>
             </div>
           )}
         </div>
 
-        <Separator />
+        <div className="border-t border-gray-200 my-4"></div>
 
         {/* Bidding Form */}
         <form onSubmit={handleBidSubmit} className="space-y-4">
           <div>
-            <label htmlFor="bidAmount" className="block text-sm font-medium mb-1">
+            <label htmlFor="bidAmount" className="block text-sm font-medium text-gray-900 mb-1">
               Your Bid (USD)
             </label>
             <div className="flex gap-2">
-              <Input
+              <input
                 id="bidAmount"
                 type="number"
                 min={minimumBidAmount}
@@ -306,23 +301,23 @@ export function AuctionDetails({ product, userBalance = 0 }: AuctionDetailsProps
                 value={bidAmount}
                 onChange={(e) => setBidAmount(e.target.value)}
                 disabled={isAuctionEnded || !user || !product.isPublished || product.isSoldout || isLoading}
-                className="flex-1"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-gray-50 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Enter amount in USD"
               />
-              <Button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isAuctionEnded || !user || !product.isPublished || product.isSoldout || isLoading}
-                className="w-1/3"
+                className="w-1/3 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="inline mr-2 h-4 w-4 animate-spin" />
                     Placing Bid...
                   </>
                 ) : (
                   "Place Bid"
                 )}
-              </Button>
+              </button>
             </div>
 
             <p className="text-sm text-gray-500 mt-1">
@@ -330,19 +325,19 @@ export function AuctionDetails({ product, userBalance = 0 }: AuctionDetailsProps
             </p>
 
             {!user && <p className="text-sm text-gray-500 mt-1">Please log in to place a bid</p>}
-            {!product.isPublished && <p className="text-sm text-yellow-600 mt-1">This product is pending verification</p>}
+            {!product.isPublished && <p className="text-sm text-emerald-600 mt-1">This product is pending verification</p>}
             {product.isSoldout && <p className="text-sm text-red-500 mt-1">This product has been sold</p>}
             {isAuctionEnded && <p className="text-sm text-red-500 mt-1">This auction has ended</p>}
           </div>
 
           {(bidStatus.message || error) && (
-            <Alert variant={bidStatus.type === "error" || error ? "destructive" : "default"}>
-              {(bidStatus.type === "error" || error) && <AlertCircle className="h-4 w-4" />}
-              <AlertDescription>{error || bidStatus.message}</AlertDescription>
-            </Alert>
+            <div className={`flex items-start gap-2 p-4 rounded-lg ${bidStatus.type === "error" || error ? "bg-red-50 border border-red-200" : "bg-emerald-50 border border-emerald-200"}`}>
+              {(bidStatus.type === "error" || error) && <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />}
+              <p className={`text-sm ${bidStatus.type === "error" || error ? "text-red-700" : "text-emerald-700"}`}>{error || bidStatus.message}</p>
+            </div>
           )}
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

@@ -150,7 +150,7 @@ const getBiddingHistory = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const biddingHistory = await BiddingProduct.find({ product: productId }).sort("-createdAt").populate("user").populate("product");
 
-  // console.log(biddingHistory);
+
   res.status(200).json(biddingHistory);
 });
 

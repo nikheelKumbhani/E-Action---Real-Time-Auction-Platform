@@ -62,7 +62,7 @@ const getuserProfile = async () => {
 const loginuserAsSeller = async (userData) => {
     try {
 
-        const response = await axiosPrivate.post(AUTH_URL + "/seller", userData);
+        const response = await axiosPrivate.post(AUTH_URL + "seller", userData);
 
         return response.data;
     } catch (error) {

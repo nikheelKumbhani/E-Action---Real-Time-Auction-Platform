@@ -1,220 +1,284 @@
 import { useEffect, useState } from "react";
-import { FaFacebook, FaGoogle } from "react-icons/fa";
-import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-import { Caption, Container, CustomNavLink, Loader, PrimaryButton, Title } from "../../router";
-import { commonClassNameOfInput } from "../../components/common/Design";
+import { CustomNavLink, Loader, FieldError, showErrorToast, showSuccessToast, useFormErrors } from "../../router";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { register, RESET } from "../../redux/features/authSlice"; // ✅ Import RESET
-import { toast } from "react-toastify";
-
+import { register, RESET } from "../../redux/features/authSlice";
+import { Gavel, Eye, EyeOff, UserPlus } from "lucide-react";
 
 const initialState = {
   name: "",
   email: "",
   password: "",
-  confirmPassword: "",
+  cpassword: "",
 };
 
 export const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState(initialState);
-  const { name, email, password, confirmPassword } = formData;
+  const { name, email, password, cpassword } = formData;
 
-  // States for password visibility
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
-  // Error state
-  const [errors, setErrors] = useState({});
-
-  // Get authentication state from Redux
-  const { isLoading, isLoggedIn, isSuccess, user, isError, message } = useSelector((state) => state.auth);
+  const { errors, setFieldError, clearFieldError, clearAllErrors } = useFormErrors();
+  const { isLoading, isSuccess, isError, message } = useSelector((state) => state.auth);
 
   useEffect(() => {
-
-    // if (isSuccess && user) {
-    //   navigate("/login"); // Redirect after successful registration
-    // }
-
-    if (isError) {
-      toast.error(message || "Registration failed");
+    if (isError && message) {
+      const errorMessage = typeof message === 'string'
+        ? message
+        : message?.message || 'Registration failed. Please try again.';
+      showErrorToast(errorMessage);
     }
 
     return () => {
       dispatch(RESET());
     };
-  }, [isLoggedIn, isError, navigate]);
+  }, [dispatch, isSuccess, isError, message, navigate]);
 
   const validateForm = () => {
-    let newErrors = {};
+    clearAllErrors();
+    let isValid = true;
 
-    // Name Validation (no leading spaces, max 50 chars)
     if (!name.trim()) {
-      newErrors.name = "Name cannot start with a space";
-    } else if (name.length > 50) {
-      newErrors.name = "Name cannot exceed 50 characters";
+      setFieldError("name", "Name is required");
+      isValid = false;
+    } else if (name.length < 3) {
+      setFieldError("name", "Name must be at least 3 characters");
+      isValid = false;
     }
 
-    // Email Validation (must be correct format)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      newErrors.email = "Invalid email format";
+    if (!email.trim()) {
+      setFieldError("email", "Email is required");
+      isValid = false;
+    } else if (!emailRegex.test(email)) {
+      setFieldError("email", "Invalid email format");
+      isValid = false;
     }
 
-    // Password Validation (must contain letters, numbers, and symbols)
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordRegex.test(password)) {
-      newErrors.password = "Password must have at least 8 characters, one letter, one number, and one symbol";
+    if (!password.trim()) {
+      setFieldError("password", "Password is required");
+      isValid = false;
+    } else if (password.length < 8) {
+      setFieldError("password", "Password must be at least 8 characters");
+      isValid = false;
     }
 
-    // Confirm Password Validation (must match password)
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+    if (!cpassword.trim()) {
+      setFieldError("cpassword", "Please confirm your password");
+      isValid = false;
+    } else if (password !== cpassword) {
+      setFieldError("cpassword", "Passwords do not match");
+      isValid = false;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (!termsAccepted) {
+      setFieldError("terms", "You must accept the Terms & Conditions to continue");
+      isValid = false;
+    }
+
+    return isValid;
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-
-    // Clear error when user starts typing
-    setErrors({ ...errors, [name]: "" });
+    clearFieldError(name);
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      // Dispatch registration request to backend
-      const userData = {
-        name,
-        email,
-        password,
-      };
-      dispatch(register(userData));
-      navigate("/login"); // Redirect after successful registration
+      const userData = { name, email, password };
+      const result = await dispatch(register(userData));
+
+      if (result.meta.requestStatus === 'fulfilled') {
+        showSuccessToast("Registration successful! Please check your email to verify your account.");
+        setTimeout(() => {
+          navigate("/login");
+        }, 3000);
+      }
     }
   };
 
-
   return (
     <>
-    {typeof window !== "undefined" && isLoading && <Loader />}
-      <section className="regsiter pt-16 relative">
-        <div className="bg-green w-96 h-96 rounded-full opacity-20 blur-3xl absolute top-2/3"></div>
-        <div className="bg-[#241C37] pt-8 h-[40vh] relative content">
-          <Container>
-            <div>
-              <Title level={3} className="text-white">Sign Up</Title>
-              <div className="flex items-center gap-3">
-                <Title level={5} className="text-green font-normal text-xl">Home</Title>
-                <Title level={5} className="text-white font-normal text-xl">/</Title>
-                <Title level={5} className="text-white font-normal text-xl">Sign Up</Title>
-              </div>
+      {typeof window !== "undefined" && isLoading && <Loader />}
+      <section className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <div className="flex items-center gap-2">
+              <Gavel className="w-10 h-10 text-emerald-600" />
+              <span className="text-3xl font-bold text-gray-900">AuctionHub</span>
             </div>
-          </Container>
-        </div>
+          </div>
 
-        <form onSubmit={handleRegister} className="bg-white shadow-s3 w-1/3 m-auto my-16 p-8 rounded-xl">
+          {/* Header */}
           <div className="text-center">
-            <Title level={5}>Sign Up</Title>
-            <p className="mt-2 text-lg">
-              Do you already have an account? <CustomNavLink href="/login">Log In Here</CustomNavLink>
+            <h2 className="text-3xl font-bold text-gray-900">Create Your Account</h2>
+            <p className="mt-2 text-gray-600">
+              Already have an account?{" "}
+              <CustomNavLink href="/login" className="text-emerald-600 font-medium hover:text-emerald-700">
+                Log in here
+              </CustomNavLink>
             </p>
           </div>
+        </div>
 
-          {/* Name Field */}
-          <div className="py-5">
-            <Caption className="mb-2">Username *</Caption>
-            <input
-              type="text"
-              name="name"
-              value={name}
-              onChange={handleInputChange}
-              className={commonClassNameOfInput}
-              placeholder="First Name"
-              required
-            />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-          </div>
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-6 shadow-lg rounded-2xl border border-gray-200">
+            <form onSubmit={handleRegister} className="space-y-6">
+              {/* Name Field */}
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={name}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  placeholder="John Doe"
+                  required
+                />
+                <FieldError error={errors.name} />
+              </div>
 
-          {/* Email Field */}
-          <div className="py-5">
-            <Caption className="mb-2">Enter Your Email *</Caption>
-            <input
-              type="email"
-              name="email"
-              value={email}
-              onChange={handleInputChange}
-              className={commonClassNameOfInput}
-              placeholder="Enter Your Email"
-              required
-            />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
-          </div>
+              {/* Email Field */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={email}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                  placeholder="you@example.com"
+                  required
+                />
+                <FieldError error={errors.email} />
+              </div>
 
-          {/* Password Field */}
-          <div className="py-5 relative">
-            <Caption className="mb-2">Password *</Caption>
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={password}
-              onChange={handleInputChange}
-              className={commonClassNameOfInput}
-              placeholder="Enter Your Password"
-              required
-            />
+              {/* Password Field */}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    value={password}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all pr-12"
+                    placeholder="Create a strong password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                <FieldError error={errors.password} />
+                <p className="text-xs text-gray-500 mt-1">
+                  Must be at least 8 characters
+                </p>
+              </div>
 
-            {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
-          </div>
+              {/* Confirm Password Field */}
+              <div>
+                <label htmlFor="cpassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    id="cpassword"
+                    name="cpassword"
+                    value={cpassword}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all pr-12"
+                    placeholder="Confirm your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                <FieldError error={errors.cpassword} />
+              </div>
 
-          {/* Confirm Password Field */}
-          <div className="py-5 relative">
-            <Caption className="mb-2">Confirm Password *</Caption>
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              name="confirmPassword"
-              value={confirmPassword}
-              onChange={handleInputChange}
-              className={commonClassNameOfInput}
-              placeholder="Confirm Password"
-              required
-            />
-            {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
-          </div>
+              {/* Terms & Conditions */}
+              <div>
+                <div className="flex items-start">
+                  <input
+                    type="checkbox"
+                    id="terms-register"
+                    checked={termsAccepted}
+                    onChange={(e) => {
+                      setTermsAccepted(e.target.checked);
+                      if (e.target.checked) {
+                        clearFieldError('terms');
+                      }
+                    }}
+                    className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 cursor-pointer mt-1"
+                  />
+                  <label htmlFor="terms-register" className="ml-2 text-sm text-gray-600 cursor-pointer">
+                    I agree to the{" "}
+                    <CustomNavLink href="/terms" className="text-emerald-600 hover:text-emerald-700 underline">
+                      Terms & Conditions
+                    </CustomNavLink>
+                    {" "}and{" "}
+                    <CustomNavLink href="/privacy" className="text-emerald-600 hover:text-emerald-700 underline">
+                      Privacy Policy
+                    </CustomNavLink>
+                  </label>
+                </div>
+                <FieldError error={errors.terms} />
+              </div>
 
-          <PrimaryButton className="w-full rounded-none my-5" type="submit" disabled={isLoading}>
-            {isLoading ? "Creating Account..." : "CREATE ACCOUNT"}
-          </PrimaryButton>
-
-          <div className="flex items-center gap-2 py-4">
-            <input type="checkbox" />
-            <Caption>I agree to the Terms & Policy</Caption>
-          </div>
-          <div className="text-center border py-4 rounded-lg mt-4">
-            <Title>OR SIGNUP WITH</Title>
-            <div className="flex items-center justify-center gap-5 mt-5">
-              <button className="flex items-center gap-2 bg-red-500 text-white p-3 px-5 rounded-sm">
-                <FaGoogle />
-                <p className="text-sm">SIGNUP WHIT GOOGLE</p>
+              {/* Register Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <UserPlus className="w-5 h-5" />
+                {isLoading ? "Creating Account..." : "Create Account"}
               </button>
-              <button className="flex items-center gap-2 bg-indigo-500 text-white p-3 px-5 rounded-sm">
-                <FaFacebook />
-                <p className="text-sm">SIGNUP WHIT FACEBOOK</p>
-              </button>
-            </div>
+            </form>
           </div>
-          <p className="text-center mt-5">
-            By clicking the signup button, you create a Cobiro account, and you agree to Cobiros <span className="text-green underline">Terms & Conditions</span> &
-            <span className="text-green underline"> Privacy Policy </span>.
-          </p>
-        </form>
-      </section >
+
+          {/* Info Box */}
+          <div className="mt-6 bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+            <p className="text-sm text-emerald-800 text-center">
+              <strong>Note:</strong> You can upgrade to a seller account anytime from your dashboard
+            </p>
+          </div>
+        </div>
+
+        {/* Footer Note */}
+        <p className="mt-8 text-center text-sm text-gray-500 max-w-md mx-auto">
+          By creating an account, you agree to our Terms of Service and Privacy Policy
+        </p>
+      </section>
     </>
   );
 };

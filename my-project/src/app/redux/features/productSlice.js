@@ -20,8 +20,28 @@ export const createProduct = createAsyncThunk(
   async (formData) => {
     try {
       const response = await productService.createProduct(formData);
+
+      // Debug logging
+      console.log("Full response:", response);
+      console.log("response.data:", response.data);
+
+      // Defensive check for response structure
+      if (!response || !response.data) {
+        console.error("Invalid response structure:", response);
+        throw new Error("Invalid response from server");
+      }
+
+      // Backend returns { success: true, data: product }
+      if (response.data.data) {
+        console.log("Returning response.data.data:", response.data.data);
+        return response.data.data;
+      }
+
+      // Fallback: if backend returns product directly
+      console.log("Returning response.data:", response.data);
       return response.data;
     } catch (error) {
+      console.error("Error in createProduct:", error);
       const message =
         (error.response?.data?.message) || error.message || "Failed to create product";
       throw new Error(message);
@@ -58,9 +78,9 @@ export const getAllProductsOfUser = createAsyncThunk("product/get-user-products"
 export const getAllWonedProductsOfUser = createAsyncThunk("product/get-user-woned-products", async (_, thunkAPI) => {
   try {
 
-    const data =  await productService.getAllWonedProductsOfUser();
+    const data = await productService.getAllWonedProductsOfUser();
     // console.log(data);
-    
+
     return data;
   } catch (error) {
     return thunkAPI.rejectWithValue(error.response.data.message);
@@ -159,22 +179,22 @@ const productSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-     // Create a product
-     .addCase(createProduct.pending, (state) => {
-      state.isLoading = true;
-    })
-    .addCase(createProduct.fulfilled, (state, action) => {
-      state.isLoading = false;
-      state.isSuccess = true;
-      state.isError = false;
-      state.products.push(action.payload);
-      state.message = "Product created successfully";
-    })
-    .addCase(createProduct.rejected, (state, action) => {
-      state.isLoading = false;
-      state.isError = true;
-      state.message = action.payload;
-    })
+      // Create a product
+      .addCase(createProduct.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(createProduct.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.products.push(action.payload);
+        state.message = "Product created successfully";
+      })
+      .addCase(createProduct.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
       // Get all products
       .addCase(getAllProducts.pending, (state) => {
         state.isLoading = true;
@@ -183,7 +203,9 @@ const productSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.products = action.payload;
+        // Handle new paginated response format
+        state.products = action.payload.products || action.payload;
+        state.pagination = action.payload.pagination || state.pagination;
       })
       .addCase(getAllProducts.rejected, (state, action) => {
         state.isLoading = false;
@@ -193,8 +215,8 @@ const productSlice = createSlice({
       })
 
       .addCase(getAllProductsOfUser.pending, (state) => {
-         state.isLoading = true;
-       })
+        state.isLoading = true;
+      })
       .addCase(getAllProductsOfUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
@@ -209,8 +231,8 @@ const productSlice = createSlice({
       })
 
       .addCase(getAllWonedProductsOfUser.pending, (state) => {
-         state.isLoading = true;
-       })
+        state.isLoading = true;
+      })
       .addCase(getAllWonedProductsOfUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
@@ -241,7 +263,7 @@ const productSlice = createSlice({
         state.product = null;  // Changed from {} to null
         toast.error("Failed to fetch product details");
       })
-     
+
       // Update product
       .addCase(updateProduct.pending, (state) => {
         state.isLoading = true;
@@ -270,12 +292,12 @@ const productSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.product = action.payload;
+        state.product = action.payload.data;  // ✅ Access nested data
         // Update in products array if exists
         state.products = state.products.map((product) =>
-          product._id === action.payload._id ? action.payload : product
+          product._id === action.payload.data._id ? action.payload.data : product
         );
-        state.message = "Product updated successfully by admin";
+        state.message = action.payload.message || "Product updated successfully by admin";
       })
       .addCase(updateProductByAdmin.rejected, (state, action) => {
         state.isLoading = false;
@@ -307,7 +329,7 @@ const productSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.products = state.products.map(product => 
+        state.products = state.products.map(product =>
           product._id === action.payload.data._id ? action.payload.data : product
         );
         toast.success("Product sold successfully!");

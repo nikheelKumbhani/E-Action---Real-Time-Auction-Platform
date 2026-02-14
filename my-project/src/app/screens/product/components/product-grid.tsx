@@ -4,11 +4,6 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { NavLink } from "react-router-dom"
 import { Heart, Clock, Award, CheckCircle, AlertCircle } from "lucide-react"
-import { Button } from "@/app/components/ui/button"
-import { Badge } from "@/app/components/ui/badge"
-import { Card, CardContent, CardFooter, CardHeader } from "@/app/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/app/components/ui/tooltip"
 import { useToast } from "@/app/hooks/use-toast"
 import { cn } from "@/app/lib/utils"
 import { useDispatch, useSelector } from "react-redux"
@@ -74,7 +69,7 @@ export default function ProductGrid({ filters }: ProductGridProps) {
     if (filters.search) {
       const searchLower = filters.search.toLowerCase()
       result = result.filter(
-        product => 
+        product =>
           product.title.toLowerCase().includes(searchLower) ||
           product.description.toLowerCase().includes(searchLower)
       )
@@ -162,20 +157,20 @@ export default function ProductGrid({ filters }: ProductGridProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="flex h-full flex-col space-y-8">
+      <div className="flex-1 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {paginatedProducts.length > 0 ? (
           paginatedProducts.map((product: Product) => (
             <div key={product._id} className="transition-transform hover:scale-[1.02]">
-              <Card className="overflow-hidden h-full">
+              <div className="bg-white rounded-xl border border-gray-200 hover:border-emerald-600 hover:shadow-xl transition-all duration-300 overflow-hidden h-full flex flex-col">
                 <NavLink to={`/details/${product._id}`}>
-                  <CardHeader className="p-0">
+                  <div className="p-0">
                     <div className="relative">
                       <Image
                         src={product.images[0]?.filePath || "/placeholder.svg"}
@@ -185,92 +180,91 @@ export default function ProductGrid({ filters }: ProductGridProps) {
                         className="h-48 w-full object-cover"
                       />
                       <div className="absolute right-2 top-2" onClick={(e) => e.preventDefault()}>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="rounded-full bg-background/80 backdrop-blur-sm"
-                                onClick={() => handleWatchlist(product._id)}
-                              >
-                                <Heart className="h-5 w-5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Add to watchlist</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <button
+                          className="rounded-full bg-white/90 backdrop-blur-sm p-2 hover:bg-white transition-colors shadow-md"
+                          onClick={() => handleWatchlist(product._id)}
+                        >
+                          <Heart className="h-5 w-5 text-gray-700 hover:text-emerald-600" />
+                        </button>
                       </div>
                       <div className="absolute left-2 top-2 flex flex-col gap-1">
                         {product.isFeatured && (
-                          <Badge variant="default" className="bg-amber-500 hover:bg-amber-600">
+                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-600 text-white">
                             <Award className="mr-1 h-3 w-3" /> Featured
-                          </Badge>
+                          </span>
                         )}
                         {product.isSoldout && (
-                          <Badge variant="destructive">
+                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-500 text-white">
                             <AlertCircle className="mr-1 h-3 w-3" /> Sold Out
-                          </Badge>
+                          </span>
                         )}
                         {product.verifyRequest && (
-                          <Badge variant="outline" className="bg-background/80 backdrop-blur-sm">
-                            <CheckCircle className="mr-1 h-3 w-3 text-green-500" /> Verified
-                          </Badge>
+                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-white/90 backdrop-blur-sm border border-emerald-600 text-emerald-700">
+                            <CheckCircle className="mr-1 h-3 w-3" /> Verified
+                          </span>
                         )}
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent className="p-4">
+                  </div>
+                  <div className="p-4 flex-1">
                     <div className="mb-2 flex items-center justify-between">
-                      <Badge variant="outline">{product.categoryName}</Badge>
-                      <span className="text-sm text-muted-foreground">{product.totalBids} Bids</span>
+                      <span className="inline-block px-2 py-1 rounded-md text-xs font-medium border border-gray-300 text-gray-700">{product.categoryName}</span>
+                      <span className="text-sm text-gray-600">{product.totalBids} Bids</span>
                     </div>
-                    <h3 className="mb-1 text-lg font-semibold">{product.title}</h3>
-                    <p className="mb-2 text-sm text-muted-foreground line-clamp-2">{product.description}</p>
+                    <h3 className="mb-1 text-lg font-semibold text-gray-900">{product.title}</h3>
+                    <p className="mb-2 text-sm text-gray-600 line-clamp-2">{product.description}</p>
                     <div className="mb-2 flex items-center justify-between">
-                      <span className="text-lg font-bold">{formatPrice(product.basePrice)}</span>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Clock className="mr-1 h-3 w-3" />
-                        <span className={cn(isAuctionLive(product.bidEndDate) ? "" : "text-destructive")}>
+                      <span className="text-lg font-bold text-gray-900">{formatPrice(product.basePrice)}</span>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Clock className="mr-1 h-3 w-3 text-emerald-600" />
+                        <span className={cn(isAuctionLive(product.bidEndDate) ? "text-emerald-600" : "text-red-500")}>
                           {getTimeRemaining(product.bidEndDate)}
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center">
-                      <Avatar className="h-6 w-6 mr-2">
-                        <AvatarImage src={product.user?.photo || "/placeholder.svg"} alt={product.user?.name} />
-                        <AvatarFallback>{product.user?.name?.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <span className="text-xs text-muted-foreground">{product.user?.name}</span>
+                      <div className="h-6 w-6 rounded-full overflow-hidden ring-2 ring-emerald-600 mr-2">
+                        <Image
+                          src={product.user?.photo || "/placeholder.svg"}
+                          alt={product.user?.name}
+                          width={24}
+                          height={24}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <span className="text-xs text-gray-600">{product.user?.name}</span>
                     </div>
-                  </CardContent>
+                  </div>
                 </NavLink>
-                <CardFooter className="p-4 pt-0">
-                  <NavLink 
+                <div className="p-4 pt-0">
+                  <NavLink
                     to={`/details/${product._id}`}
                     className={cn(
-                      "w-full",
+                      "block",
                       (product.isSoldout || !isAuctionLive(product.bidEndDate)) && "pointer-events-none"
                     )}
                   >
-                    <Button
-                      className="w-full"
+                    <button
+                      className={cn(
+                        "w-full px-4 py-2 rounded-lg font-medium transition-colors",
+                        product.isSoldout || !isAuctionLive(product.bidEndDate)
+                          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                          : "bg-emerald-600 text-white hover:bg-emerald-700"
+                      )}
                       disabled={product.isSoldout || !isAuctionLive(product.bidEndDate)}
                     >
                       {product.isSoldout ? "Sold Out" : !isAuctionLive(product.bidEndDate) ? "Auction Ended" : "Place Bid"}
-                    </Button>
+                    </button>
                   </NavLink>
-                </CardFooter>
-              </Card>
+                </div>
+              </div>
             </div>
           ))
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center py-12">
-            <AlertCircle className="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 text-xl font-semibold">No products found</h3>
-            <p className="text-center text-muted-foreground">
+            <AlertCircle className="mb-4 h-12 w-12 text-gray-400" />
+            <h3 className="mb-2 text-xl font-semibold text-gray-900">No products found</h3>
+            <p className="text-center text-gray-600">
               No products match your filters. Try adjusting your search criteria.
             </p>
           </div>
@@ -279,79 +273,79 @@ export default function ProductGrid({ filters }: ProductGridProps) {
 
       {filteredProducts.length > 0 && (
         <div className="flex items-center justify-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            className={cn(
+              "px-4 py-2 rounded-lg border font-medium transition-colors",
+              page === 1
+                ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                : "border-gray-300 text-gray-700 hover:border-emerald-600 hover:text-emerald-600"
+            )}
             onClick={handlePreviousPage}
             disabled={page === 1}
           >
             Previous
-          </Button>
+          </button>
 
           <div className="flex items-center gap-2">
             {page > 2 && (
               <>
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
+                  className="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
                   onClick={() => setPage(1)}
                 >
                   1
-                </Button>
-                {page > 3 && <span className="text-muted-foreground">...</span>}
+                </button>
+                {page > 3 && <span className="text-gray-400">...</span>}
               </>
             )}
 
             {page > 1 && (
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
+                className="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
                 onClick={() => setPage(page - 1)}
               >
                 {page - 1}
-              </Button>
+              </button>
             )}
 
-            <Button
-              variant="default"
-              size="sm"
-              className="bg-primary text-primary-foreground"
-            >
+            <button className="px-3 py-2 rounded-lg bg-emerald-600 text-white font-medium">
               {page}
-            </Button>
+            </button>
 
             {page < totalPages && (
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
+                className="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
                 onClick={() => setPage(page + 1)}
               >
                 {page + 1}
-              </Button>
+              </button>
             )}
 
             {page < totalPages - 1 && (
               <>
-                {page < totalPages - 2 && <span className="text-muted-foreground">...</span>}
-                <Button
-                  variant="ghost"
-                  size="sm"
+                {page < totalPages - 2 && <span className="text-gray-400">...</span>}
+                <button
+                  className="px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
                   onClick={() => setPage(totalPages)}
                 >
                   {totalPages}
-                </Button>
+                </button>
               </>
             )}
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            className={cn(
+              "px-4 py-2 rounded-lg border font-medium transition-colors",
+              page === totalPages
+                ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                : "border-gray-300 text-gray-700 hover:border-emerald-600 hover:text-emerald-600"
+            )}
             onClick={handleNextPage}
             disabled={page === totalPages}
           >
             Next
-          </Button>
+          </button>
         </div>
       )}
     </div>

@@ -2,9 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Search, X } from "lucide-react"
-import { Button } from "@/app/components/ui/button"
-import { Input } from "@/app/components/ui/input"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { useDispatch, useSelector } from "react-redux"
 import { getAllCategories } from "@/app/redux/features/categorySlice"
 
@@ -18,7 +15,7 @@ interface FilterBarProps {
 export default function FilterBar({ onSearch, onCategoryChange, onSortChange, onReset }: FilterBarProps) {
   const dispatch = useDispatch()
   const { categorys, isLoading } = useSelector((state: any) => state.category)
-  
+
   const [searchQuery, setSearchQuery] = useState("")
   const [category, setCategory] = useState("")
   const [sortBy, setSortBy] = useState("")
@@ -50,55 +47,57 @@ export default function FilterBar({ onSearch, onCategoryChange, onSortChange, on
   }
 
   return (
-    <div className="sticky top-0 z-10 bg-background py-4 mb-6 border-b">
+    <div className="sticky top-0 z-10 bg-white py-4 mb-6 border-b border-gray-200 shadow-sm">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-600" />
+          <input
+            type="text"
             placeholder="Search by product name or description..."
-            className="pl-10"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-gray-50 text-gray-900"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
           />
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Select value={category} onValueChange={handleCategoryChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {isLoading ? (
-                  <SelectItem value="loading">Loading...</SelectItem>
-                ) : (
-                  categorys?.map((cat: any) => (
-                    <SelectItem key={cat._id} value={cat._id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <select
+            value={category}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white text-gray-900 min-w-[180px]"
+          >
+            <option value="">All Categories</option>
+            {isLoading ? (
+              <option value="">Loading...</option>
+            ) : (
+              categorys?.map((cat: any) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))
+            )}
+          </select>
 
-          <Select value={sortBy} onValueChange={handleSortChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Sort By" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ending-soon">Ending Soon</SelectItem>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="price-low">Price: Low to High</SelectItem>
-              <SelectItem value="price-high">Price: High to Low</SelectItem>
-              <SelectItem value="most-bids">Most Bids</SelectItem>
-            </SelectContent>
-          </Select>
+          <select
+            value={sortBy}
+            onChange={(e) => handleSortChange(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white text-gray-900 min-w-[180px]"
+          >
+            <option value="">Sort By</option>
+            <option value="ending-soon">Ending Soon</option>
+            <option value="newest">Newest</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="most-bids">Most Bids</option>
+          </select>
 
-          <Button variant="ghost" size="sm" onClick={resetFilters} className="flex items-center">
+          <button
+            onClick={resetFilters}
+            className="flex items-center px-4 py-2 text-gray-700 hover:text-emerald-600 hover:bg-gray-50 rounded-lg transition-colors"
+          >
             <X className="mr-2 h-4 w-4" />
             Reset
-          </Button>
+          </button>
         </div>
       </div>
     </div>

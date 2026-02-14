@@ -2,7 +2,7 @@ import { CategorySection, Hero, Process, Trust, WhyChooseUs } from "../../router
 import { ProductList } from "../../components/hero/ProductList.jsx";
 import { React, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {  getAllProducts } from "@/app/redux/features/productSlice";
+import { getAllProducts } from "@/app/redux/features/productSlice";
 
 
 export const Home = () => {
@@ -20,7 +20,6 @@ export const Home = () => {
       <WhyChooseUs />
       <Process />
       <Trust />
-
     </>
   );
 };

@@ -9,7 +9,7 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/loggedin", loginStatus);
 router.post("/logout", logoutUser);
-router.post("/seller", loginAsSeller);
+router.post("/seller", protect, loginAsSeller);
 router.get("/getuser", protect, getUser);
 router.get("/sell-amount", protect, getUserBalance);
 

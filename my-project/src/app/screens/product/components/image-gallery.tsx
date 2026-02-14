@@ -4,7 +4,6 @@ import { useState } from "react"
 import Image from "next/image"
 import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
-import { Button } from "@/app/components/ui/button"
 
 interface ImageGalleryProps {
   images: string[]
@@ -29,7 +28,7 @@ export function ImageGallery({ images }: ImageGalleryProps) {
   return (
     <div className="space-y-4">
       {/* Main Image */}
-      <div className="relative rounded-lg overflow-hidden border border-gray-200 aspect-square">
+      <div className="relative rounded-xl overflow-hidden border-2 border-gray-200 aspect-square">
         <div className="relative w-full h-full group">
           <Image
             src={images[currentImage] || "/placeholder.svg"}
@@ -40,33 +39,27 @@ export function ImageGallery({ images }: ImageGalleryProps) {
           />
 
           {/* Zoom/Fullscreen button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity"
+          <button
+            className="absolute top-2 right-2 bg-white/90 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-white"
             onClick={() => setShowLightbox(true)}
           >
-            <Maximize2 className="h-5 w-5" />
-          </Button>
+            <Maximize2 className="h-5 w-5 text-emerald-600" />
+          </button>
 
           {/* Navigation arrows */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity"
+          <button
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-white"
             onClick={prevImage}
           >
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
+            <ChevronLeft className="h-6 w-6 text-emerald-600" />
+          </button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity"
+          <button
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-white"
             onClick={nextImage}
           >
-            <ChevronRight className="h-6 w-6" />
-          </Button>
+            <ChevronRight className="h-6 w-6 text-emerald-600" />
+          </button>
         </div>
       </div>
 
@@ -76,8 +69,8 @@ export function ImageGallery({ images }: ImageGalleryProps) {
           <div
             key={index}
             className={cn(
-              "relative w-20 h-20 flex-shrink-0 cursor-pointer rounded-md overflow-hidden border-2",
-              currentImage === index ? "border-primary" : "border-transparent",
+              "relative w-20 h-20 flex-shrink-0 cursor-pointer rounded-md overflow-hidden border-2 transition-all",
+              currentImage === index ? "border-emerald-600 ring-2 ring-emerald-600 ring-offset-2" : "border-gray-300 hover:border-emerald-400",
             )}
             onClick={() => handleThumbnailClick(index)}
           >
@@ -106,28 +99,24 @@ export function ImageGallery({ images }: ImageGalleryProps) {
               height={800}
               className="object-contain max-h-[90vh]"
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40"
+            <button
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-emerald-600/80 hover:bg-emerald-600 p-3 rounded-lg transition-colors"
               onClick={(e) => {
                 e.stopPropagation()
                 prevImage()
               }}
             >
-              <ChevronLeft className="h-8 w-8" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40"
+              <ChevronLeft className="h-8 w-8 text-white" />
+            </button>
+            <button
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-emerald-600/80 hover:bg-emerald-600 p-3 rounded-lg transition-colors"
               onClick={(e) => {
                 e.stopPropagation()
                 nextImage()
               }}
             >
-              <ChevronRight className="h-8 w-8" />
-            </Button>
+              <ChevronRight className="h-8 w-8 text-white" />
+            </button>
           </div>
         </div>
       )}

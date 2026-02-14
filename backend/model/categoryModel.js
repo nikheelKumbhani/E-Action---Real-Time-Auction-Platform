@@ -10,10 +10,6 @@ const categorySchema = new mongoose.Schema(
     title: {
       type: String,
       required: [true, "Title is required"],
-    },
-    name: {
-      type: String,
-      required: [true, "Name is required"],
     }
   },
   { timestamps: true }

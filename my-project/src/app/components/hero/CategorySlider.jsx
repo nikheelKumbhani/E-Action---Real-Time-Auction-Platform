@@ -9,7 +9,7 @@ function cn(...classes) {
   return classes.filter(Boolean).join(" ")
 }
 
-// Sample category data
+// Sample category data - removed gradient colors
 const categories = [
   {
     id: 1,
@@ -73,77 +73,91 @@ export default function CategorySection() {
   const regularCategories = filteredCategories.filter((category) => !category.featured)
 
   return (
-    <section className="w-full py-12 px-4 md:px-8 bg-white">
+    <section className="w-full py-20 px-4 md:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">Browse Categories</h2>
-            <p className="text-gray-600 mt-2">Discover unique items across our popular auction categories</p>
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
+              <span className="text-sm font-semibold text-emerald-700 uppercase tracking-wide">Explore</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+              Browse Categories
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl">
+              Discover unique items across our popular auction categories
+            </p>
           </div>
 
-          <div className="relative w-full md:w-64">
-            <input
-              type="text"
-              placeholder="Search categories..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          {/* Search */}
+          <div className="relative w-full md:w-80">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search categories..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent shadow-lg transition-all"
+              />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            </div>
           </div>
         </div>
 
+        {/* Featured Categories */}
         {featuredCategories.length > 0 && (
-          <div className="mb-10">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Featured Categories</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="mb-16">
+            <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              <span className="w-1 h-6 bg-emerald-600 rounded-full"></span>
+              Featured Categories
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredCategories.map((category) => (
                 <div
                   key={category.id}
-                  className="group relative overflow-hidden rounded-xl shadow-md transition-all duration-300 hover:shadow-xl"
+                  className="group relative overflow-hidden rounded-2xl border-2 border-gray-200 hover:border-emerald-500 shadow-xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-2"
                   onMouseEnter={() => setActiveCategory(category.id)}
                   onMouseLeave={() => setActiveCategory(null)}
                 >
-                  <div className="relative h-48 w-full overflow-hidden">
+                  {/* Card Image */}
+                  <div className="relative h-64 w-full overflow-hidden">
                     <img
                       src={category.image || "/placeholder.svg"}
                       alt={category.name}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                    {/* Dark Overlay */}
+                    <div className="absolute inset-0 bg-black/40"></div>
                   </div>
 
-                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <h4 className="text-xl font-bold">{category.name}</h4>
+                  {/* Card Content */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h4 className="text-2xl font-bold mb-1">{category.name}</h4>
                     <p className="text-sm opacity-90">{category.itemCount} items</p>
                   </div>
 
+                  {/* Hover Overlay */}
                   <div
                     className={cn(
-                      "absolute inset-0 bg-black/80 flex flex-col justify-center items-center p-6 transition-opacity duration-300",
+                      "absolute inset-0 bg-emerald-600/95 backdrop-blur-sm flex flex-col justify-center items-center p-8 transition-all duration-500",
                       activeCategory === category.id ? "opacity-100" : "opacity-0 pointer-events-none",
                     )}
                   >
-                    <h4 className="text-xl font-bold text-white mb-4">{category.name}</h4>
-                    <ul className="space-y-2 w-full">
-                      {category.subcategories.map((subcategory, index) => (
-                        <li key={index}>
-                          <a
-                            href="#"
-                            className="flex items-center text-gray-200 hover:text-white transition-colors duration-200"
-                          >
-                            <ChevronRight className="h-4 w-4 mr-2" />
-                            {subcategory}
-                          </a>
-                        </li>
+                    <h4 className="text-2xl font-bold text-white mb-4">{category.name}</h4>
+                    <div className="flex flex-wrap gap-2 justify-center mb-6">
+                      {category.subcategories.map((sub, idx) => (
+                        <span key={idx} className="px-3 py-1 bg-white/20 rounded-full text-white text-sm">
+                          {sub}
+                        </span>
                       ))}
-                    </ul>
-                    <a
-                      href="#"
-                      className="mt-6 px-4 py-2 bg-white text-gray-900 rounded-md font-medium hover:bg-gray-100 transition-colors duration-200"
+                    </div>
+                    <NavLink
+                      to={`/category/${category.id}`}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl font-semibold hover:bg-gray-100 transition-all"
                     >
-                      View All
-                    </a>
+                      Browse Now
+                      <ChevronRight className="w-4 h-4" />
+                    </NavLink>
                   </div>
                 </div>
               ))}
@@ -151,42 +165,46 @@ export default function CategorySection() {
           </div>
         )}
 
-        <div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">All Categories</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {regularCategories.map((category) => (
-              <a
-                key={category.id}
-                href="#"
-                className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-              >
-                <div className="h-12 w-12 rounded-md overflow-hidden mr-3 flex-shrink-0">
-                  <img
-                    src={category.image || "/placeholder.svg"}
-                    alt={category.name}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">{category.name}</h4>
-                  <p className="text-sm text-gray-500">{category.itemCount} items</p>
-                </div>
-              </a>
-            ))}
+        {/* All Categories Grid */}
+        {regularCategories.length > 0 && (
+          <div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              <span className="w-1 h-6 bg-emerald-600 rounded-full"></span>
+              All Categories
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+              {regularCategories.map((category) => (
+                <NavLink
+                  key={category.id}
+                  to={`/category/${category.id}`}
+                  className="group relative flex flex-col items-center p-6 bg-white border-2 border-gray-200 hover:border-emerald-500 rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                >
+                  <div className="w-16 h-16 rounded-xl bg-emerald-600 mb-4 flex items-center justify-center overflow-hidden">
+                    <img
+                      src={category.image || "/placeholder.svg"}
+                      alt={category.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h4 className="text-sm font-semibold text-gray-900 text-center mb-1">{category.name}</h4>
+                  <p className="text-xs text-gray-500">{category.itemCount} items</p>
+                </NavLink>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
+        {/* View All Button */}
         <div className="mt-12 text-center">
           <NavLink
-            to="/product"
-            className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+            to="/categories"
+            className="inline-flex items-center px-8 py-4 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
           >
             View All Categories
-            <ChevronRight className="ml-2 h-4 w-4" />
+            <ChevronRight className="ml-2 w-5 h-5" />
           </NavLink>
         </div>
       </div>
     </section>
   )
 }
-

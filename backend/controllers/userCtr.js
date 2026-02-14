@@ -17,7 +17,17 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Please fill in all required fields");
   }
 
-  const userExits = await User.findOne({ email });
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    res.status(400);
+    throw new Error("Please enter a valid email address");
+  }
+
+  // Convert email to lowercase for consistency
+  const normalizedEmail = email.toLowerCase();
+
+  const userExits = await User.findOne({ email: normalizedEmail });
   if (userExits) {
     res.status(400);
     throw new Error("Email already exists");
@@ -25,7 +35,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const user = await User.create({
     name,
-    email,
+    email: normalizedEmail,
     password,
   });
 
@@ -56,7 +66,18 @@ const loginUser = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Please add Email and Password");
   }
-  const user = await User.findOne({ email });
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    res.status(400);
+    throw new Error("Please enter a valid email address");
+  }
+
+  // Convert email to lowercase for consistency
+  const normalizedEmail = email.toLowerCase();
+
+  const user = await User.findOne({ email: normalizedEmail });
   if (!user) {
     res.status(400);
     throw new Error("User not found, Please signUp");
@@ -74,8 +95,8 @@ const loginUser = asyncHandler(async (req, res) => {
   });
 
   if (user && passwordIsCorrect) {
-    const { _id, name, email, photo, role } = user;
-    res.status(201).json({ _id, name, email, photo, role, token });
+    const { _id, name, email, photo, role, balance, commissionBalance } = user;
+    res.status(201).json({ _id, name, email, photo, role, balance, commissionBalance, token });
   } else {
     res.status(400);
     throw new Error("Invalid email or password");
@@ -159,34 +180,27 @@ const logoutUser = asyncHandler(async (req, res) => {
   }
 }); */
 const loginAsSeller = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  // Get the authenticated user from the request (set by protect middleware)
+  const userId = req.user._id;
 
-
-  // Check if email and password are provided
-  if (!email || !password) {
-    res.status(400);
-    throw new Error("Please provide both email and password");
-  }
-
-  // Find the user by email
-  const user = await User.findOne({ email });
+  // Find the user
+  const user = await User.findById(userId);
   if (!user) {
-    res.status(400);
-    throw new Error("User not found, please sign up");
+    res.status(404);
+    throw new Error("User not found");
   }
 
-  // Verify the password
-  const passwordIsCorrect = await bcrypt.compare(password, user.password);
-  if (!passwordIsCorrect) {
+  // Check if user is already a seller
+  if (user.role === "seller") {
     res.status(400);
-    throw new Error("Invalid email or password");
+    throw new Error("You are already a seller");
   }
 
-  // If password is correct, update the role to 'seller'
+  // Update the role to 'seller'
   user.role = "seller";
   await user.save();
 
-  // Generate a token and set cookie
+  // Generate a new token with updated user info
   const token = generateToken(user._id);
   res.cookie("token", token, {
     path: "/",
@@ -197,8 +211,8 @@ const loginAsSeller = asyncHandler(async (req, res) => {
   });
 
   // Send the response with updated user info
-  const { _id, name, email: userEmail, photo, role } = user;
-  res.status(200).json({ _id, name, email: userEmail, photo, role, token });
+  const { _id, name, email, photo, role } = user;
+  res.status(200).json({ _id, name, email, photo, role, token });
 });
 
 const getUserBalance = asyncHandler(async (req, res) => {

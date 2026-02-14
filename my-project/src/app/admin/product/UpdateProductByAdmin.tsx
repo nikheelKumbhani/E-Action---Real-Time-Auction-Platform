@@ -3,51 +3,156 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import { format, isValid } from "date-fns"
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "@/app/redux/store"
 import { ThunkDispatch } from 'redux-thunk'
 import { AnyAction } from '@reduxjs/toolkit'
 import {
   ArrowLeft,
-  Calendar,
-  Car,
-  Check,
   ChevronLeft,
   ChevronRight,
-  Clock,
-  DollarSign,
-  Package,
-  Star,
-  User,
+  Check,
   X,
+  Star,
+  AlertTriangle,
+  Loader2,
+  User,
+  Package,
+  DollarSign,
+  Calendar,
 } from "lucide-react"
 
-import { Button } from "@/app/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/app/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs"
-import { Badge } from "@/app/components/ui/badge"
-import { Separator } from "@/app/components/ui/separator"
-import { Switch } from "@/app/components/ui/switch"
-import { Textarea } from "@/app/components/ui/textarea"
-import { Input } from "@/app/components/ui/input"
-import { Label } from "@/app/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/app/components/ui/dialog"
 import { getProduct, updateProductByAdmin } from "@/app/redux/features/productSlice"
 import { getUserById } from "@/app/redux/features/authSlice"
+import { toast } from "react-toastify"
 
 // Helper function to safely format dates
 const safeFormatDate = (dateString: string, formatString: string = "MMMM d, yyyy") => {
   const date = new Date(dateString)
   return isValid(date) ? format(date, formatString) : 'Invalid Date'
+}
+
+// Approve Confirmation Modal
+const ApproveModal = ({ isOpen, onClose, onConfirm, isSubmitting }: any) => {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+        <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                <Check className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Confirm Approval</h3>
+                <p className="text-sm text-gray-600">Publish this product</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <p className="text-gray-700">
+            Are you sure you want to approve and publish this product? It will be visible to all users and available for bidding.
+          </p>
+        </div>
+
+        <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isSubmitting}
+            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Approving...
+              </>
+            ) : (
+              <>
+                <Check className="h-4 w-4" />
+                Confirm Approval
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Reject Confirmation Modal
+const RejectModal = ({ isOpen, onClose, onConfirm, isSubmitting }: any) => {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+        <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-red-50 to-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Confirm Rejection</h3>
+                <p className="text-sm text-gray-600">Reject this product</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <p className="text-gray-700">
+            Are you sure you want to reject this product? The seller will be notified of the rejection.
+          </p>
+        </div>
+
+        <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isSubmitting}
+            className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Rejecting...
+              </>
+            ) : (
+              <>
+                <X className="h-4 w-4" />
+                Confirm Rejection
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function ProductVerificationPage() {
@@ -66,10 +171,11 @@ export default function ProductVerificationPage() {
   const [bidEndDate, setBidEndDate] = useState("")
   const [showApproveDialog, setShowApproveDialog] = useState(false)
   const [showRejectDialog, setShowRejectDialog] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activeTab, setActiveTab] = useState<'product' | 'actions'>('product')
 
   useEffect(() => {
     if (id) {
-      console.log('Fetching product with ID:', id)
       // @ts-ignore
       dispatch(getProduct(id))
     }
@@ -77,7 +183,6 @@ export default function ProductVerificationPage() {
 
   useEffect(() => {
     if (product?.user) {
-      // If product.user is a string (ID), fetch user details
       if (typeof product.user === 'string') {
         // @ts-ignore
         dispatch(getUserById(product.user))
@@ -90,7 +195,6 @@ export default function ProductVerificationPage() {
     }
   }, [product, dispatch])
 
-  // Update verifyRequest when isPublished changes
   useEffect(() => {
     if (isPublished) {
       setVerifyRequest(true)
@@ -118,380 +222,480 @@ export default function ProductVerificationPage() {
       adminNotes,
       verifyRequest: true
     }
-    
+
     try {
+      setIsSubmitting(true)
       // @ts-ignore
-      await dispatch(updateProductByAdmin({ id, formData }))
+      await dispatch(updateProductByAdmin({ id, formData })).unwrap()
+      toast.success("Product approved and published successfully!")
       setShowApproveDialog(false)
       navigate('/admin/dashboard/products')
     } catch (error) {
+      toast.error("Failed to approve product. Please try again.")
       console.error("Error updating product:", error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
-  console.log(product)
-  const handleReject = () => {
-    // Handle rejection logic here
-    setShowRejectDialog(false)
+
+  const handleReject = async () => {
+    try {
+      setIsSubmitting(true)
+      // Add rejection logic here
+      toast.success("Product rejected")
+      setShowRejectDialog(false)
+    } catch (error) {
+      toast.error("Failed to reject product")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleToggleFeatured = async () => {
+    const newFeaturedState = !isFeatured
+    setIsFeatured(newFeaturedState)
+
+    const formData = {
+      isFeatured: newFeaturedState
+    }
+
+    try {
+      // @ts-ignore
+      await dispatch(updateProductByAdmin({ id, formData }))
+      toast.success(newFeaturedState ? "Product marked as featured" : "Product removed from featured")
+    } catch (error) {
+      toast.error("Failed to update product")
+      setIsFeatured(!newFeaturedState) // Revert on error
+    }
   }
 
   if (isLoading || !product) {
-    return <div>Loading...</div>
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-emerald-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading product details...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-7xl">
+    <div className="max-w-7xl mx-auto p-8">
+      {/* Modals */}
+      <ApproveModal
+        isOpen={showApproveDialog}
+        onClose={() => setShowApproveDialog(false)}
+        onConfirm={handleApprove}
+        isSubmitting={isSubmitting}
+      />
+
+      <RejectModal
+        isOpen={showRejectDialog}
+        onClose={() => setShowRejectDialog(false)}
+        onConfirm={handleReject}
+        isSubmitting={isSubmitting}
+      />
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Verify Product for Auction</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Verify Product for Auction</h1>
+          <p className="text-gray-600">Review and approve product submissions</p>
         </div>
-        <Button variant="outline" className="mt-4 md:mt-0" onClick={() => window.history.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+        <button
+          onClick={() => window.history.back()}
+          className="mt-4 md:mt-0 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
           Back to List
-        </Button>
+        </button>
       </div>
 
       {/* Status Badge */}
       <div className="mb-6">
-        <Badge variant="outline" className={`${product.isPublished ? "bg-green-50 text-green-700 border-green-200" : "bg-yellow-50 text-yellow-700 border-yellow-200"} px-3 py-1 text-sm`}>
-          {product.isPublished ? "Published" : "Pending Approval"}
-        </Badge>
+        <span className={`inline-flex px-4 py-1.5 rounded-full text-sm font-medium ${product.isPublished
+          ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+          : "bg-yellow-100 text-yellow-700 border border-yellow-200"
+          }`}>
+          {product.isPublished ? "✓ Published" : "⏳ Pending Approval"}
+        </span>
       </div>
 
-      <Tabs defaultValue="product" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="product">Product Details</TabsTrigger>
-          <TabsTrigger value="actions">Admin Actions</TabsTrigger>
-        </TabsList>
+      {/* Tabs */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <div className="flex gap-4">
+            <button
+              onClick={() => setActiveTab('product')}
+              className={`px-6 py-3 font-medium border-b-2 transition-colors ${activeTab === 'product'
+                ? 'border-emerald-600 text-emerald-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+            >
+              Product Details
+            </button>
+            <button
+              onClick={() => setActiveTab('actions')}
+              className={`px-6 py-3 font-medium border-b-2 transition-colors ${activeTab === 'actions'
+                ? 'border-emerald-600 text-emerald-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+            >
+              Admin Actions
+            </button>
+          </div>
+        </div>
+      </div>
 
-        {/* Product Details Tab */}
-        <TabsContent value="product">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Product Images Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Images</CardTitle>
-                <CardDescription>Review product images for quality and appropriateness</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="relative aspect-video bg-muted rounded-md overflow-hidden">
-                  {product.images && product.images.length > 0 && (
+      {/* Product Details Tab */}
+      {activeTab === 'product' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Product Images Card */}
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">Product Images</h3>
+              <p className="text-sm text-gray-600 mt-1">Review product images for quality and appropriateness</p>
+            </div>
+            <div className="p-6">
+              <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden mb-4">
+                {product.images && product.images.length > 0 && (
+                  <Image
+                    src={product.images[currentImageIndex].filePath}
+                    alt={`Product image ${currentImageIndex + 1}`}
+                    fill
+                    className="object-cover"
+                  />
+                )}
+                <button
+                  onClick={prevImage}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white rounded-lg shadow-md transition-colors"
+                >
+                  <ChevronLeft className="h-5 w-5 text-gray-700" />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white rounded-lg shadow-md transition-colors"
+                >
+                  <ChevronRight className="h-5 w-5 text-gray-700" />
+                </button>
+              </div>
+
+              {/* Thumbnails */}
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {product.images && product.images.map((image: any, index: number) => (
+                  <div
+                    key={index}
+                    className={`relative w-20 h-20 rounded-lg overflow-hidden cursor-pointer border-2 transition-colors ${index === currentImageIndex ? "border-emerald-600" : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    onClick={() => setCurrentImageIndex(index)}
+                  >
                     <Image
-                      src={product.images[currentImageIndex].filePath}
-                      alt={`Product image ${currentImageIndex + 1}`}
+                      src={image.filePath}
+                      alt={`Thumbnail ${index + 1}`}
                       fill
                       className="object-cover"
                     />
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90"
-                    onClick={prevImage}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90"
-                    onClick={nextImage}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex mt-4 gap-2 overflow-x-auto pb-2">
-                  {product.images && product.images.map((image: any, index: number) => (
-                    <div
-                      key={index}
-                      className={`relative w-20 h-20 rounded-md overflow-hidden cursor-pointer border-2 ${
-                        index === currentImageIndex ? "border-primary" : "border-transparent"
-                      }`}
-                      onClick={() => setCurrentImageIndex(index)}
-                    >
-                      <Image
-                        src={image.filePath}
-                        alt={`Thumbnail ${index + 1}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Product Information Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Information</CardTitle>
-                <CardDescription>Basic details about the product</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Seller Information */}
-                <div className="p-4 bg-muted rounded-lg mb-4">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Seller Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">Seller Name</h3>
-                      <p className="text-base font-medium">{selectedUser?.name || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">Seller Email</h3>
-                      <p className="text-base font-medium">{selectedUser?.email || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">Seller Role</h3>
-                      <p className="text-base font-medium capitalize">{selectedUser?.role || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">Account Created</h3>
-                      <p className="text-base font-medium">
-                        {selectedUser?.createdAt ? safeFormatDate(selectedUser.createdAt) : 'N/A'}
-                      </p>
-                    </div>
                   </div>
-                </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
-                {/* Product Details */}
+          {/* Product Information Card */}
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">Product Information</h3>
+              <p className="text-sm text-gray-600 mt-1">Basic details about the product</p>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* Seller Information */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Seller Information
+                </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Product Title</h3>
-                    <p className="text-base font-medium">{product.title}</p>
+                    <p className="text-xs text-gray-600 mb-1">Name</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedUser?.name || 'N/A'}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Slug (URL)</h3>
-                    <p className="text-base font-medium">{product.slug}</p>
+                    <p className="text-xs text-gray-600 mb-1">Email</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedUser?.email || 'N/A'}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Category</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-base font-medium">{product.categoryName}</p>
-                    </div>
+                    <p className="text-xs text-gray-600 mb-1">Role</p>
+                    <p className="text-sm font-medium text-gray-900 capitalize">{selectedUser?.role || 'N/A'}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Physical Product</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-base font-medium">{product.isPhysical ? "Yes" : "No"}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Base Price</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-base font-medium">${product.basePrice}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Starting Bid</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-base font-medium">${product.bidStartPrice}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Quantity</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-base font-medium">{product.quantity}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Total Bids</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-base font-medium">
-                        {!product.isPublished 
-                          ? "Pending Verification" 
-                          : product.totalBids === 0 
-                            ? "No bids placed yet" 
-                            : product.totalBids}
-                      </p>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Auction End Date</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-base font-medium">
-                        {product.bidEndDate ? safeFormatDate(product.bidEndDate) : 'No end date set'}
-                      </p>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Created On</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-base font-medium">
-                        {product.createdAt ? safeFormatDate(product.createdAt) : 'Unknown date'}
-                      </p>
-                    </div>
+                    <p className="text-xs text-gray-600 mb-1">Joined</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {selectedUser?.createdAt ? safeFormatDate(selectedUser.createdAt) : 'N/A'}
+                    </p>
                   </div>
                 </div>
+              </div>
 
-                <Separator />
-
+              {/* Product Details */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Description</h3>
-                  <div className="p-3 bg-muted rounded-md">
-                    <p className="text-sm">{product.description}</p>
-                  </div>
+                  <p className="text-xs text-gray-600 mb-1">Product Title</p>
+                  <p className="text-sm font-medium text-gray-900">{product.title}</p>
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Category</p>
+                  <p className="text-sm font-medium text-gray-900">{product.categoryName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Base Price</p>
+                  <p className="text-sm font-medium text-emerald-600">${product.basePrice}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Starting Bid</p>
+                  <p className="text-sm font-medium text-emerald-600">${product.bidStartPrice}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Quantity</p>
+                  <p className="text-sm font-medium text-gray-900">{product.quantity}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Physical Product</p>
+                  <p className="text-sm font-medium text-gray-900">{product.isPhysical ? "Yes" : "No"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Total Bids</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {!product.isPublished
+                      ? "Pending Verification"
+                      : product.totalBids === 0
+                        ? "No bids yet"
+                        : product.totalBids}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Auction End</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {product.bidEndDate ? safeFormatDate(product.bidEndDate) : 'Not set'}
+                  </p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-gray-600 mb-1">Created On</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {product.createdAt ? safeFormatDate(product.createdAt) : 'Unknown'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <p className="text-xs text-gray-600 mb-2">Description</p>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-sm text-gray-700">{product.description}</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Admin Actions Tab */}
-        <TabsContent value="actions">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Status</CardTitle>
-                <CardDescription>Current status of the product</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-4 h-4 rounded-full ${verifyRequest ? "bg-green-500" : "bg-red-500"} flex items-center justify-center`}>
-                      {verifyRequest ? <Check className="h-3 w-3 text-white" /> : <X className="h-3 w-3 text-white" />}
-                    </div>
-                    <Label htmlFor="verify-request">Verify Request</Label>
+      {/* Admin Actions Tab */}
+      {activeTab === 'actions' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Product Status Card */}
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">Product Status</h3>
+              <p className="text-sm text-gray-600 mt-1">Current status of the product</p>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Verify Request */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${verifyRequest ? "bg-emerald-100" : "bg-red-100"
+                    }`}>
+                    {verifyRequest ? (
+                      <Check className="h-5 w-5 text-emerald-600" />
+                    ) : (
+                      <X className="h-5 w-5 text-red-600" />
+                    )}
                   </div>
-                  <span className="text-sm">{verifyRequest ? "Yes" : "No"}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-4 h-4 rounded-full ${isPublished ? "bg-green-500" : "bg-red-500"} flex items-center justify-center`}>
-                      {isPublished ? <Check className="h-3 w-3 text-white" /> : <X className="h-3 w-3 text-white" />}
-                    </div>
-                    <Label htmlFor="is-published">Is Published</Label>
+                  <div>
+                    <p className="font-medium text-gray-900">Verify Request</p>
+                    <p className="text-sm text-gray-600">Verification status</p>
                   </div>
-                  <Switch id="is-published" checked={isPublished} onCheckedChange={setIsPublished} />
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-4 h-4 rounded-full ${isFeatured ? "bg-green-500" : "bg-red-500"} flex items-center justify-center`}>
-                      {isFeatured ? <Check className="h-3 w-3 text-white" /> : <X className="h-3 w-3 text-white" />}
-                    </div>
-                    <Label htmlFor="is-featured">Is Featured</Label>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${verifyRequest
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-red-100 text-red-700"
+                  }`}>
+                  {verifyRequest ? "Yes" : "No"}
+                </span>
+              </div>
+
+              {/* Is Published */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isPublished ? "bg-emerald-100" : "bg-red-100"
+                    }`}>
+                    {isPublished ? (
+                      <Check className="h-5 w-5 text-emerald-600" />
+                    ) : (
+                      <X className="h-5 w-5 text-red-600" />
+                    )}
                   </div>
-                  <Switch id="is-featured" checked={isFeatured} onCheckedChange={setIsFeatured} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-4 h-4 rounded-full ${product.isSoldout ? "bg-green-500" : "bg-red-500"} flex items-center justify-center`}>
-                      {product.isSoldout ? <Check className="h-3 w-3 text-white" /> : <X className="h-3 w-3 text-white" />}
-                    </div>
-                    <Label htmlFor="is-sold-out">Is Sold Out</Label>
+                  <div>
+                    <p className="font-medium text-gray-900">Published</p>
+                    <p className="text-sm text-gray-600">Visible to users</p>
                   </div>
-                  <span className="text-sm">{product.isSoldout ? "Yes" : "No"}</span>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Admin Actions</CardTitle>
-                <CardDescription>Take action on this product submission</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="admin-notes">Admin Notes (Optional)</Label>
-                  <Textarea
-                    id="admin-notes"
-                    placeholder="Add any notes about this product..."
-                    className="min-h-[100px]"
-                    value={adminNotes}
-                    onChange={(e) => setAdminNotes(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="commission-rate">Commission Rate (%)</Label>
-                  <Input
-                    id="commission-rate"
-                    type="number"
-                    value={commissionRate}
-                    onChange={(e) => setCommissionRate(Number(e.target.value))}
-                    min={0}
-                    max={100}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bid-end-date">Change Bid End Date (Optional)</Label>
-                  <Input 
-                    id="bid-end-date" 
-                    type="date" 
-                    value={bidEndDate}
-                    onChange={(e) => setBidEndDate(e.target.value)}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col sm:flex-row gap-3">
-                <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full sm:w-auto">
-                      <Check className="mr-2 h-4 w-4" />
-                      Approve & Publish
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Confirm Approval</DialogTitle>
-                      <DialogDescription>
-                        Are you sure you want to approve and publish this product? It will be visible to all users.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setShowApproveDialog(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleApprove}>Confirm Approval</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-
-                <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-                  <DialogTrigger asChild>
-                    <Button variant="destructive" className="w-full sm:w-auto">
-                      <X className="mr-2 h-4 w-4" />
-                      Reject Product
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Confirm Rejection</DialogTitle>
-                      <DialogDescription>
-                        Are you sure you want to reject this product? The seller will be notified.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setShowRejectDialog(false)}>
-                        Cancel
-                      </Button>
-                      <Button variant="destructive" onClick={handleReject}>
-                        Confirm Rejection
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-
-                <Button 
-                  variant="outline" 
-                  className="w-full sm:w-auto"
-                  onClick={() => {
-                    setIsFeatured(!isFeatured)
-                    const formData = {
-                      isFeatured: !isFeatured
-                    }
-                    // @ts-ignore
-                    dispatch(updateProductByAdmin({ id, formData }))
-                  }}
+                <button
+                  onClick={() => setIsPublished(!isPublished)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isPublished ? "bg-emerald-600" : "bg-gray-300"
+                    }`}
                 >
-                  <Star className="mr-2 h-4 w-4" />
-                  {isFeatured ? 'Remove from Featured' : 'Mark as Featured'}
-                </Button>
-              </CardFooter>
-            </Card>
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isPublished ? "translate-x-6" : "translate-x-1"
+                      }`}
+                  />
+                </button>
+              </div>
+
+              {/* Is Featured */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isFeatured ? "bg-emerald-100" : "bg-red-100"
+                    }`}>
+                    {isFeatured ? (
+                      <Star className="h-5 w-5 text-emerald-600" />
+                    ) : (
+                      <X className="h-5 w-5 text-red-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Featured</p>
+                    <p className="text-sm text-gray-600">Highlighted product</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsFeatured(!isFeatured)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isFeatured ? "bg-emerald-600" : "bg-gray-300"
+                    }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isFeatured ? "translate-x-6" : "translate-x-1"
+                      }`}
+                  />
+                </button>
+              </div>
+
+              {/* Is Sold Out */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${product.isSoldout ? "bg-emerald-100" : "bg-red-100"
+                    }`}>
+                    {product.isSoldout ? (
+                      <Check className="h-5 w-5 text-emerald-600" />
+                    ) : (
+                      <X className="h-5 w-5 text-red-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Sold Out</p>
+                    <p className="text-sm text-gray-600">Inventory status</p>
+                  </div>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${product.isSoldout
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-red-100 text-red-700"
+                  }`}>
+                  {product.isSoldout ? "Yes" : "No"}
+                </span>
+              </div>
+            </div>
           </div>
-        </TabsContent>
-      </Tabs>
+
+          {/* Admin Actions Card */}
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">Admin Actions</h3>
+              <p className="text-sm text-gray-600 mt-1">Take action on this product submission</p>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Admin Notes */}
+              <div>
+                <label htmlFor="admin-notes" className="block text-sm font-medium text-gray-900 mb-2">
+                  Admin Notes (Optional)
+                </label>
+                <textarea
+                  id="admin-notes"
+                  placeholder="Add any notes about this product..."
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 min-h-[100px]"
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                />
+              </div>
+
+              {/* Commission Rate */}
+              <div>
+                <label htmlFor="commission-rate" className="block text-sm font-medium text-gray-900 mb-2">
+                  Commission Rate (%)
+                </label>
+                <input
+                  id="commission-rate"
+                  type="number"
+                  value={commissionRate}
+                  onChange={(e) => setCommissionRate(Number(e.target.value))}
+                  min={0}
+                  max={100}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white text-gray-900"
+                />
+              </div>
+
+              {/* Bid End Date */}
+              <div>
+                <label htmlFor="bid-end-date" className="block text-sm font-medium text-gray-900 mb-2">
+                  Change Bid End Date (Optional)
+                </label>
+                <input
+                  id="bid-end-date"
+                  type="date"
+                  value={bidEndDate}
+                  onChange={(e) => setBidEndDate(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white text-gray-900"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-3 pt-4">
+                <button
+                  onClick={() => setShowApproveDialog(true)}
+                  className="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <Check className="h-5 w-5" />
+                  Approve & Publish
+                </button>
+
+                <button
+                  onClick={() => setShowRejectDialog(true)}
+                  className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <X className="h-5 w-5" />
+                  Reject Product
+                </button>
+
+                <button
+                  onClick={handleToggleFeatured}
+                  className="w-full px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <Star className="h-5 w-5" />
+                  {isFeatured ? 'Remove from Featured' : 'Mark as Featured'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

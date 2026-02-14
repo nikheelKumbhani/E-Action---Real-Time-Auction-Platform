@@ -275,3 +275,25 @@ For support, email your-email@example.com or open an issue in the repository.
 ---
 
 **Built with ❤️ using the MERN Stack**
+
+
+
+
+
+ADMIN:
+  Email: admin@test.com
+  Password: Admin123
+  Balance: $100000
+
+
+SELLER:
+  Email: seller@test.com
+  Password: Seller123
+  Balance: $5000
+
+BUYER:
+  Email: buyer@test.com
+  Password: Buyer123
+  Balance: $10000
+
+

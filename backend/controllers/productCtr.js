@@ -6,6 +6,11 @@ const BiddingProduct = require("../model/biddingProductModel");
 const cloudinary = require("cloudinary").v2;
 
 const createProduct = asyncHandler(async (req, res) => {
+  console.log("=== CREATE PRODUCT REQUEST ===");
+  console.log("Body:", req.body);
+  console.log("Files:", req.files);
+  console.log("User:", req.user?._id);
+
   const {
     title,
     description,
@@ -33,6 +38,13 @@ const createProduct = asyncHandler(async (req, res) => {
   if (!title || !description || !basePrice || !category || !bidEndDate) {
     res.status(400);
     throw new Error("Please fill in all required fields");
+  }
+
+  // Validate bid end date is in the future
+  const bidEndDateObj = new Date(bidEndDate);
+  if (bidEndDateObj <= new Date()) {
+    res.status(400);
+    throw new Error("Bid end date must be in the future");
   }
 
   // Handle multiple images
@@ -74,7 +86,7 @@ const createProduct = asyncHandler(async (req, res) => {
       bidEndDate,
       images: fileData,
       bidStartPrice: basePrice,
-      commission: 10,
+      commission: process.env.DEFAULT_COMMISSION || 10,
       verifyRequest: false,
       isPublished: false,
       isFeatured: false,
@@ -84,8 +96,11 @@ const createProduct = asyncHandler(async (req, res) => {
     });
 
     await product.save();
+    console.log("Product saved successfully:", product._id);
+    console.log("Sending response:", { success: true, data: product });
     res.status(201).json({ success: true, data: product });
   } catch (error) {
+    console.error("Error creating product:", error.message);
     res.status(500);
     throw new Error("Failed to create product: " + error.message);
   }
@@ -93,7 +108,18 @@ const createProduct = asyncHandler(async (req, res) => {
 
 
 const getAllProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find({}).sort("-createdAt").populate("user");
+  // Pagination parameters
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const skip = (page - 1) * limit;
+
+  const products = await Product.find({})
+    .sort("-createdAt")
+    .skip(skip)
+    .limit(limit)
+    .populate("user");
+
+  const total = await Product.countDocuments({});
 
   const productsWithDetails = products.map(product => ({
     ...product._doc,
@@ -119,7 +145,15 @@ const getAllProducts = asyncHandler(async (req, res) => {
     product.totalBids = bidCountMap.get(product._id.toString()) || 0;
   });
 
-  res.status(200).json(productsWithDetails);
+  res.status(200).json({
+    products: productsWithDetails,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
+  });
 });
 
 const getAllProductsofUser = asyncHandler(async (req, res) => {
@@ -131,7 +165,7 @@ const getAllProductsofUser = asyncHandler(async (req, res) => {
     products.map(async (product) => {
       const latestBid = await BiddingProduct.findOne({ product: product._id }).sort("-createdAt");
       const totalBids = await BiddingProduct.countDocuments({ product: product._id });
-      const biddingPrice = latestBid ? latestBid.price : product.price;
+      const biddingPrice = latestBid ? latestBid.price : product.basePrice;
 
       return {
         ...product._doc,
@@ -147,7 +181,7 @@ const getAllProductsofUser = asyncHandler(async (req, res) => {
 const getWonProducts = asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
-  // console.log(userId);
+
 
 
   const wonProducts = await Product.find({ soldTo: userId }).sort("-createdAt").populate("user");
@@ -172,7 +206,11 @@ const getAllSoldProducts = asyncHandler(async (req, res) => {
 });
 const getProductBySlug = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const product = await Product.findById(id);
+  const product = await Product.findById(id)
+    .populate('user', 'name email photo role createdAt')  // Populate seller information
+    .populate('category', 'name description')  // Populate category details
+    .populate('soldTo', 'name email');  // Populate buyer if product is sold
+
   if (!product) {
     res.status(404);
     throw new Error("Product not found");
@@ -192,13 +230,21 @@ const deleteProduct = asyncHandler(async (req, res) => {
     throw new Error("User not authorized");
   }
 
-  if (product.image && product.image.public_id) {
+  // Delete all images from Cloudinary
+  if (product.images && product.images.length > 0) {
     try {
-      await cloudinary.uploader.destroy(product.image.public_id);
+      for (const image of product.images) {
+        if (image.public_id) {
+          await cloudinary.uploader.destroy(image.public_id);
+        }
+      }
     } catch (error) {
-      console.error("Error deleting image from Cloudinary:", error);
+      console.error("Error deleting images from Cloudinary:", error);
     }
   }
+
+  // Delete associated bids (cascade delete)
+  await BiddingProduct.deleteMany({ product: id });
 
   await Product.findByIdAndDelete(id);
   res.status(200).json({ message: "Product deleted." });
@@ -225,7 +271,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     try {
       for (const file of req.files) {
         const uploadedFile = await cloudinary.uploader.upload(file.path, {
-          folder: "Product-Images",
+          folder: "Bidding/Product",
           resource_type: "image",
         });
         newImages.push({
@@ -308,7 +354,7 @@ const getAllProductsByAmdin = asyncHandler(async (req, res) => {
   const productsWithPrices = await Promise.all(
     products.map(async (product) => {
       const latestBid = await BiddingProduct.findOne({ product: product._id }).sort("-createdAt");
-      const biddingPrice = latestBid ? latestBid.price : product.price;
+      const biddingPrice = latestBid ? latestBid.price : product.basePrice;
       return {
         ...product._doc,
         biddingPrice, // Adding the price field
@@ -319,17 +365,42 @@ const getAllProductsByAmdin = asyncHandler(async (req, res) => {
   res.status(200).json(productsWithPrices);
 });
 
-// dot not it
+// Admin bulk delete products
 const deleteProductsByAmdin = asyncHandler(async (req, res) => {
-  try {
-    const { productIds } = req.body;
+  const { productIds } = req.body;
 
-    const result = await Product.findOneAndDelete({ _id: productIds });
-
-    res.status(200).json({ message: `${result.deletedCount} products deleted successfully` });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  // Validate input
+  if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+    res.status(400);
+    throw new Error("Please provide product IDs to delete");
   }
+
+  // Delete images from Cloudinary first
+  const products = await Product.find({ _id: { $in: productIds } });
+  for (const product of products) {
+    if (product.images && product.images.length > 0) {
+      for (const image of product.images) {
+        if (image.public_id) {
+          try {
+            await cloudinary.uploader.destroy(image.public_id);
+          } catch (error) {
+            console.error(`Error deleting image ${image.public_id}:`, error);
+          }
+        }
+      }
+    }
+  }
+
+  // Delete products from database
+  const result = await Product.deleteMany({ _id: { $in: productIds } });
+
+  // Delete associated bids (cascade delete)
+  await BiddingProduct.deleteMany({ product: { $in: productIds } });
+
+  res.status(200).json({
+    message: `${result.deletedCount} product(s) deleted successfully`,
+    deletedCount: result.deletedCount
+  });
 });
 
 

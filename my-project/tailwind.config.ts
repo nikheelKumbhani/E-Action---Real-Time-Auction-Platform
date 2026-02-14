@@ -1,18 +1,15 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  darkMode: ["class"],
+  content: [
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
   theme: {
     extend: {
-      boxShadow: {
-        s1: "0px 6px 24px 0px rgba(0, 0, 0, 0.05), 0px 0px 0px 1px rgba(0, 0, 0, 0.08)",
-        s2: "0px 1px 4px rgba(0, 0, 0, 0.16)",
-        s3: "0px 8px 24px rgba(149, 157, 165, 0.2)",
-      },
       colors: {
-        green: "#5BBB7B",
-        green_100: "#EEF8F2",
-        gray_100: "#6C7278",
-        text: "#222222",
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -70,28 +67,42 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)'
       },
       keyframes: {
-        'accordion-down': {
-          from: {
-            height: '0'
-          },
-          to: {
-            height: 'var(--radix-accordion-content-height)'
-          }
+        gradientShift: {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
         },
-        'accordion-up': {
-          from: {
-            height: 'var(--radix-accordion-content-height)'
-          },
-          to: {
-            height: '0'
-          }
-        }
+        float: {
+          '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+          '50%': { transform: 'translateY(-30px) rotate(180deg)' },
+        },
+        fadeInUp: {
+          from: { opacity: '0', transform: 'translateY(30px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        fadeIn: {
+          from: { opacity: '0', transform: 'translateY(-10px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideDown: {
+          from: { opacity: '0', transform: 'translateY(-20px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out'
-      }
+        'gradient-shift': 'gradientShift 15s ease infinite',
+        'float': 'float 20s ease-in-out infinite',
+        'float-reverse': 'float 15s ease-in-out infinite reverse',
+        'float-slow': 'float 18s ease-in-out infinite',
+        'fade-in-up': 'fadeInUp 1s ease-out',
+        'fade-in': 'fadeIn 0.2s ease-out',
+        'slide-down': 'slideDown 0.3s ease-out',
+      },
+      backgroundSize: {
+        '400': '400% 400%',
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],
 };
+
+export default config;
