@@ -9,6 +9,14 @@ const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const WARNING_TIME = 5 * 60 * 1000; // Show warning 5 minutes before expiry
 const CHECK_INTERVAL = 60 * 1000; // Check every minute
 
+// Enable debug logging
+const DEBUG_SESSION = true;
+const logSession = (message, data = null) => {
+    if (DEBUG_SESSION) {
+        const timestamp = new Date().toLocaleTimeString();
+    }
+};
+
 /**
  * Hook to manage session timeout
  */
@@ -35,15 +43,26 @@ export const useSessionTimeout = (options = {}) => {
         setShowWarning(false);
         setTimeRemaining(null);
 
+        logSession('Resetting session timer', {
+            timeout: `${timeout / 1000 / 60} minutes`,
+            warningTime: `${warningTime / 1000 / 60} minutes`
+        });
+
         // Clear existing timers
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         if (warningRef.current) clearTimeout(warningRef.current);
         if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
 
-        if (!enabled) return;
+        if (!enabled) {
+            logSession('Session timeout disabled');
+            return;
+        }
 
         // Set warning timer
         warningRef.current = setTimeout(() => {
+            logSession('⚠️ Session warning triggered', {
+                timeRemaining: `${warningTime / 1000 / 60} minutes`
+            });
             setShowWarning(true);
             if (onWarning) onWarning();
             showWarningToast('Your session will expire soon. Please save your work.', { autoClose: 8000 });
@@ -51,6 +70,9 @@ export const useSessionTimeout = (options = {}) => {
 
         // Set timeout timer
         timeoutRef.current = setTimeout(() => {
+            logSession('❌ Session timeout reached', {
+                totalTime: `${timeout / 1000 / 60} minutes`
+            });
             handleTimeout();
         }, timeout);
 
@@ -67,17 +89,21 @@ export const useSessionTimeout = (options = {}) => {
 
     // Handle session timeout
     const handleTimeout = useCallback(() => {
+        logSession('🔴 Handling session timeout - logging out user');
         setShowWarning(false);
 
         // Save current location for redirect after login
         const currentPath = window.location.pathname;
         if (currentPath !== '/login' && currentPath !== '/register') {
             sessionStorage.setItem('redirectAfterLogin', currentPath);
+            logSession('Saved redirect path', currentPath);
         }
 
         if (onTimeout) {
+            logSession('Calling custom onTimeout handler');
             onTimeout();
         } else {
+            logSession('Using default logout behavior');
             showInfoToast('Your session has expired. Please log in again.');
             navigate('/login');
         }
@@ -106,6 +132,9 @@ export const useSessionTimeout = (options = {}) => {
 
             // Only reset if more than 1 minute has passed since last activity
             if (timeSinceLastActivity > 60000) {
+                logSession('User activity detected - resetting timer', {
+                    timeSinceLastActivity: `${Math.floor(timeSinceLastActivity / 1000)}s`
+                });
                 resetTimer();
             }
         };
@@ -115,6 +144,11 @@ export const useSessionTimeout = (options = {}) => {
         });
 
         // Initialize timer
+        logSession('🟢 Session timeout initialized', {
+            timeout: `${timeout / 1000 / 60} minutes`,
+            warningTime: `${warningTime / 1000 / 60} minutes`,
+            enabled
+        });
         resetTimer();
 
         return () => {

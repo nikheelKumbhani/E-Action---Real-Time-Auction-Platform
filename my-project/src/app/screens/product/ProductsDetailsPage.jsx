@@ -3,7 +3,7 @@ import { ProductInfo } from "./components/product-info"
 import { AuctionDetails } from "./components/auction-details"
 import { SellerInfo } from "./components/seller-info"
 import { useParams } from 'react-router-dom';
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getProduct } from "../../redux/features/productSlice";
 import { getAllCategories } from "../../redux/features/categorySlice";
@@ -27,6 +27,13 @@ export default function ProductDetails() {
   useEffect(() => {
     dispatch(getAllCategories());
   }, [dispatch]);
+
+  // Callback to refetch product data after bid placement
+  const handleRefetchProduct = useCallback(() => {
+    if (id) {
+      dispatch(getProduct(id));
+    }
+  }, [dispatch, id]);
 
   if (isLoading || !product) {
     return (
@@ -59,7 +66,11 @@ export default function ProductDetails() {
                 <ProductInfo product={{ ...product, categoryDetails: category }} />
               </div>
 
-              <AuctionDetails product={product} userBalance={user?.balance || 0} />
+              <AuctionDetails
+                product={product}
+                userBalance={user?.balance || 0}
+                onBidSuccess={handleRefetchProduct}
+              />
             </div>
           </div>
 

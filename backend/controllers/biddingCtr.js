@@ -167,7 +167,7 @@ const sellProduct = asyncHandler(async (req, res) => {
 
 
   // Check if the user is authorized to sell the product
-  if (product.user.toString() !== userId) {
+  if (product.user.toString() !== userId.toString()) {
     return res.status(403).json({ error: "You do not have permission to sell this product" });
   }
 
@@ -193,6 +193,32 @@ const sellProduct = asyncHandler(async (req, res) => {
     admin.commissionBalance += commissionAmount;
     await admin.save();
   }
+
+  // Deduct bid amount from winner's balance
+  const winner = await User.findById(highestBid.user._id);
+  if (!winner) {
+    return res.status(404).json({ error: "Winner not found" });
+  }
+
+  // Check if winner has sufficient balance
+  if (winner.balance < highestBid.price) {
+    return res.status(400).json({
+      error: "Winner has insufficient balance to complete purchase",
+      required: highestBid.price,
+      available: winner.balance
+    });
+  }
+
+  // Deduct the full bid amount from winner
+  winner.balance -= highestBid.price;
+  winner.transactions = winner.transactions || [];
+  winner.transactions.push({
+    type: 'withdrawal',
+    amount: highestBid.price,
+    date: new Date(),
+    description: `Purchase of product: ${product.title}`
+  });
+  await winner.save();
 
   // Update seller's balance
   const seller = await User.findById(product.user);

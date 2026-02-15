@@ -14,19 +14,20 @@ export const Table = ({ products, delProduct, handleSellProduct, isWon, startInd
     });
   };
 
+
   // Get status badge for product status with emerald-600 theme
   const getStatusBadge = (product) => {
-    if (product.isPublished) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-emerald-100 text-emerald-700">
-          Verified
-        </span>
-      );
-    }
     if (product.isSoldout) {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-red-100 text-red-700">
           Sold Out
+        </span>
+      );
+    }
+    if (product.isPublished) {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-emerald-100 text-emerald-700">
+          Verified
         </span>
       );
     }
@@ -64,13 +65,13 @@ export const Table = ({ products, delProduct, handleSellProduct, isWon, startInd
           {products.map((product, index) => (
             <tr key={product._id} className="hover:bg-gray-50 transition-colors">
               <td className="px-6 py-4 text-sm text-gray-700">
-                {startIndex + index + 1}
+                {(startIndex || 0) + index + 1}
               </td>
               <td className="px-6 py-4">
-                {product.image ? (
+                {(product.image || (product.images && product.images.length > 0 && product.images[0].filePath)) ? (
                   <div className="relative h-16 w-16 flex-shrink-0">
                     <Image
-                      src={product.image}
+                      src={product.image || product.images[0].filePath}
                       alt={product.title}
                       fill
                       className="rounded-lg object-cover border border-gray-200"
@@ -89,8 +90,8 @@ export const Table = ({ products, delProduct, handleSellProduct, isWon, startInd
                 ${product.basePrice}
               </td>
               <td className="px-6 py-4 text-sm">
-                {product.biddingPrice ? (
-                  <span className="font-semibold text-emerald-600">${product.biddingPrice}</span>
+                {product.currentHighestBid ? (
+                  <span className="font-semibold text-emerald-600">${product.currentHighestBid}</span>
                 ) : (
                   <span className="text-gray-400">No bids yet</span>
                 )}

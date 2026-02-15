@@ -15,8 +15,6 @@ export const WinningBidList = () => {
     dispatch(getAllWonedProductsOfUser())
   }, [dispatch]);
 
-  console.log(wonedproduct); // Fixed: changed wonedproducts to wonedproduct
-
   return (
     <>
       <section className="shadow-s1 p-8 rounded-lg">

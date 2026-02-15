@@ -14,8 +14,6 @@ const initialState = {
 // ✅ Create Category
 export const createCategory = createAsyncThunk("category/create", async (formData, thunkAPI) => {
     try {
-        console.log(formData); // ✅ Corrected Logging
-
         return await categoryService.createCategory(formData);
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response?.data || "Failed to create category !!");

@@ -22,7 +22,7 @@ interface AuctionDetailsProps {
     basePrice?: number;
     bidStartPrice?: number;
     commission?: number;
-    currentBid?: number;
+    currentHighestBid?: number;
     totalBids?: number;
     bidEndDate?: string;
     verifyRequest?: boolean;
@@ -30,18 +30,19 @@ interface AuctionDetailsProps {
     isSoldout?: boolean;
   };
   userBalance?: number;
+  onBidSuccess?: () => void;
 }
 
-export function AuctionDetails({ product, userBalance = 0 }: AuctionDetailsProps) {
+export function AuctionDetails({ product, userBalance = 0, onBidSuccess }: AuctionDetailsProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const { isLoading, error } = useSelector((state: RootState) => state.bidding as BiddingState);
+  const { isLoading, error } = useSelector((state: RootState) => state.bidding);
   const { user } = useSelector((state: RootState) => state.auth);
 
   // Update the bidding form to show the current highest bid + minimum increment as the default bid amount
   const [bidAmount, setBidAmount] = useState<string>(() => {
-    if (product.currentBid) {
+    if (product.currentHighestBid) {
       // If there's a current bid, set default to 2% higher
-      return (product.currentBid * 1.02).toFixed(2);
+      return (product.currentHighestBid * 1.02).toFixed(2);
     } else {
       // If it's first bid, set default to 10% higher than base price
       return (product.basePrice ? product.basePrice * 1.1 : 0).toFixed(2);
@@ -91,7 +92,7 @@ export function AuctionDetails({ product, userBalance = 0 }: AuctionDetailsProps
   // Load bidding history when component mounts
   useEffect(() => {
     if (product._id) {
-      void dispatch(getBiddingHistory(product._id));
+      void dispatch(getBiddingHistory(product._id) as any);
     }
   }, [dispatch, product._id]);
 
@@ -134,7 +135,7 @@ export function AuctionDetails({ product, userBalance = 0 }: AuctionDetailsProps
     }
 
     // Validate minimum bid amount
-    if (!product.currentBid) {
+    if (!product.currentHighestBid) {
       // First bid - must be 10% higher than base price
       const minimumBid = (product.basePrice || 0) * 1.1;
       if (bidValue < minimumBid) {
@@ -146,7 +147,7 @@ export function AuctionDetails({ product, userBalance = 0 }: AuctionDetailsProps
       }
     } else {
       // Subsequent bid - must be 2% higher than current highest bid
-      const minimumBid = product.currentBid * 1.02;
+      const minimumBid = product.currentHighestBid * 1.02;
       if (bidValue <= minimumBid) {
         setBidStatus({
           message: `New bid must be at least 2% higher than current highest bid. Minimum bid required: $${minimumBid.toFixed(2)}`,
@@ -177,10 +178,15 @@ export function AuctionDetails({ product, userBalance = 0 }: AuctionDetailsProps
       const result = await dispatch(placeBid({
         productId: product._id,
         price: bidValue,
-      })).unwrap();
+      }) as any).unwrap();
 
       if (product._id) {
-        void dispatch(getBiddingHistory(product._id));
+        void dispatch(getBiddingHistory(product._id) as any);
+      }
+
+      // Refetch product data to update currentBid and totalBids
+      if (onBidSuccess) {
+        onBidSuccess();
       }
 
       setBidStatus({
@@ -199,8 +205,8 @@ export function AuctionDetails({ product, userBalance = 0 }: AuctionDetailsProps
   const isAuctionEnded = product.bidEndDate ? new Date(product.bidEndDate) < new Date() : false
 
   // Calculate minimum bid amount for display
-  const minimumBidAmount = product.currentBid
-    ? product.currentBid * 1.02  // 2% higher than current bid
+  const minimumBidAmount = product.currentHighestBid
+    ? product.currentHighestBid * 1.02  // 2% higher than current bid
     : (product.basePrice || 0) * 1.1; // 10% higher than base price
 
   return (
@@ -237,7 +243,7 @@ export function AuctionDetails({ product, userBalance = 0 }: AuctionDetailsProps
             <div className="flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-emerald-600" />
               <p className="font-bold text-lg text-emerald-600">
-                {(product.currentBid || 0).toLocaleString()}
+                {(product.currentHighestBid || 0).toLocaleString()}
               </p>
             </div>
           </div>

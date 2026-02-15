@@ -21,27 +21,14 @@ export const createProduct = createAsyncThunk(
     try {
       const response = await productService.createProduct(formData);
 
-      // Debug logging
-      console.log("Full response:", response);
-      console.log("response.data:", response.data);
-
-      // Defensive check for response structure
       if (!response || !response.data) {
-        console.error("Invalid response structure:", response);
         throw new Error("Invalid response from server");
       }
-
-      // Backend returns { success: true, data: product }
       if (response.data.data) {
-        console.log("Returning response.data.data:", response.data.data);
         return response.data.data;
       }
-
-      // Fallback: if backend returns product directly
-      console.log("Returning response.data:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Error in createProduct:", error);
       const message =
         (error.response?.data?.message) || error.message || "Failed to create product";
       throw new Error(message);
@@ -79,8 +66,6 @@ export const getAllWonedProductsOfUser = createAsyncThunk("product/get-user-wone
   try {
 
     const data = await productService.getAllWonedProductsOfUser();
-    // console.log(data);
-
     return data;
   } catch (error) {
     return thunkAPI.rejectWithValue(error.response.data.message);
@@ -160,7 +145,7 @@ const sellProduct = createAsyncThunk(
     try {
       return await productService.sellProduct(id);
     } catch (error) {
-      const message = error.response?.data?.message || "Failed to sell product";
+      const message = error.response?.data?.message || error.response?.data?.error || "Failed to sell product";
       return thunkAPI.rejectWithValue(message);
     }
   }
@@ -329,10 +314,7 @@ const productSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.products = state.products.map(product =>
-          product._id === action.payload.data._id ? action.payload.data : product
-        );
-        toast.success("Product sold successfully!");
+        toast.success(action.payload?.message || "Product sold successfully!");
       })
       .addCase(sellProduct.rejected, (state, action) => {
         state.isLoading = false;

@@ -44,7 +44,6 @@ const getCategory = asyncHandler(async (req, res) => {
 });
 const updateCategory = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  // console.log(id);
 
   try {
     const categorie = await Category.findByIdAndUpdate(

@@ -70,9 +70,15 @@ axiosPrivate.interceptors.response.use(
         return axiosPrivate(originalRequest);
       } catch (error) {
         // If refresh token fails, logout user
+        console.error('[Session] Refresh token failed, logging out:', error.message);
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
-        window.location.href = '/';
+        localStorage.removeItem('user');
+
+        // Only redirect if not already on login page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
         return Promise.reject(error);
       }
     }

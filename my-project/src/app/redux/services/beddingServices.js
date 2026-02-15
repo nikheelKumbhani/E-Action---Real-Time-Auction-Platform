@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axiosPrivate } from "./axios";
 import { BACKEND_URL } from "../../utils/url";
 
 export const BIDDING_URL = `${BACKEND_URL}/bidding/`;
@@ -6,7 +6,7 @@ export const BIDDING_URL = `${BACKEND_URL}/bidding/`;
 
 const getBiddingHistory = async (productId) => {
     try {
-        const response = await axios.get(`${BIDDING_URL}${productId}`);
+        const response = await axiosPrivate.get(`${BIDDING_URL}${productId}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching bidding history:", error);
@@ -16,7 +16,7 @@ const getBiddingHistory = async (productId) => {
 
 const sellProduct = async (productId) => {
     try {
-        const response = await axios.post(`${BIDDING_URL}sell`, productId);
+        const response = await axiosPrivate.post(`${BIDDING_URL}sell`, productId);
         return response.data;
     } catch (error) {
         console.error("Error selling product:", error);
@@ -26,11 +26,9 @@ const sellProduct = async (productId) => {
 
 const placeBid = async (bidData) => {
     try {
-        const response = await axios.post(BIDDING_URL, {
+        const response = await axiosPrivate.post(BIDDING_URL, {
             productId: bidData.productId || bidData.ProductId,
             price: Number(bidData.price)
-        }, {
-            withCredentials: true // Add this to ensure cookies are sent
         });
         return response.data;
     } catch (error) {

@@ -27,7 +27,7 @@ router.get("/won-products", protect, getWonProducts);
 router.get("/sold", getAllSoldProducts);
 router.get("/:id", getProductBySlug);
 
-router.post("/sell", protect, isSeller, sellProduct);
+router.post("/sell", protect, sellProduct);
 
 // Only access for admin users
 router.patch("/admin/product-verified/:id", protect, isAdmin, verifyAndAddCommissionProductByAmdin);

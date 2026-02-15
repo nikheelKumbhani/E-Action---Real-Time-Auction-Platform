@@ -127,8 +127,12 @@ export function RecentProductsTable() {
                   <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                     ${product?.basePrice?.toLocaleString() || 0}
                   </td>
-                  <td className="px-4 py-4 text-sm font-medium text-emerald-600 whitespace-nowrap">
-                    ${product?.bidStartPrice?.toLocaleString() || 0}
+                  <td className="px-6 py-4 text-sm">
+                    {product.currentHighestBid ? (
+                      <span className="font-semibold text-emerald-600">${product.currentHighestBid}</span>
+                    ) : (
+                      <span className="text-gray-400">No bids yet</span>
+                    )}
                   </td>
                   <td className="px-4 py-4 text-sm text-gray-700 whitespace-nowrap text-center">
                     {product.totalBids || 0}

@@ -148,7 +148,6 @@ export const ProductList = () => {
   useEffect(() => {
     dispatch(getAllProductsOfUser()).then((action) => {
       if (action.payload) {
-        console.log("Products with bid counts:", action.payload)
       }
     })
   }, [dispatch])
@@ -208,6 +207,7 @@ export const ProductList = () => {
       title: product.title,
       description: product.description,
       basePrice: product.basePrice,
+      currentHighestBid: product.currentHighestBid || 0,
       bidStartPrice: product.bidStartPrice,
       bidEndDate: product.bidEndDate,
       verifyRequest: product.verifyRequest,

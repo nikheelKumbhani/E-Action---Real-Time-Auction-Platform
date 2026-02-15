@@ -13,16 +13,10 @@ const getAuthConfig = () => {
 
 const createProduct = async (productData) => {
   try {
-    console.log("=== PRODUCT SERVICE: Creating product ===");
-    console.log("PRODUCT_URL:", PRODUCT_URL);
-
     const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
     const token = userStr ? JSON.parse(userStr).token : null;
 
-    console.log("Token exists:", !!token);
-    console.log("FormData entries:");
     for (let pair of productData.entries()) {
-      console.log(pair[0], pair[1]);
     }
 
     const config = {
@@ -32,16 +26,10 @@ const createProduct = async (productData) => {
       }
     };
 
-    console.log("Making POST request to:", PRODUCT_URL);
     const response = await axios.post(PRODUCT_URL, productData, config);
-    console.log("Response received:", response);
-    console.log("Response status:", response.status);
-    console.log("Response data:", response.data);
 
     return response.data;
   } catch (error) {
-    console.error("=== PRODUCT SERVICE ERROR ===");
-    console.error("Error:", error);
     console.error("Error response:", error.response);
     console.error("Error message:", error.message);
     console.error("Error response data:", error.response?.data);
@@ -103,7 +91,8 @@ const updateProductByAdmin = async (id, formData) => {
 };
 
 const sellProduct = async (id) => {
-  const response = await axios.patch(`${PRODUCT_URL}/sell/${id}`);
+  const config = getAuthConfig();
+  const response = await axios.post(`${PRODUCT_URL}/sell`, { productId: id }, config);
   return response.data;
 };
 

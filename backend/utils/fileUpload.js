@@ -6,17 +6,14 @@ const fs = require("fs");
 const uploadsDir = path.join(__dirname, "..", "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log("Created uploads directory:", uploadsDir);
 }
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    console.log("Saving file to:", uploadsDir);
     cb(null, uploadsDir);
   },
   filename: function (req, file, cb) {
     const uniqueName = new Date().toISOString().replace(/:/g, "-") + "-" + file.originalname;
-    console.log("Generated filename:", uniqueName);
     cb(null, uniqueName);
   },
 });

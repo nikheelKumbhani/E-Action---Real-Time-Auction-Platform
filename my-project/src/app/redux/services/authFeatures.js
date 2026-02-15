@@ -27,11 +27,9 @@ const login = async (userData) => {
 // ✅ Logout User (Fixed)
 const logout = async () => {
     try {
-        // console.log(AUTH_URL)
         const response = await axiosPublic.post(`${AUTH_URL}logout`);
         return response.data?.message || "Logout successful";
     } catch (error) {
-        console.log(error.response);
 
         throw new Error(error.response?.data?.message || "Logout failed");
     }

@@ -26,13 +26,11 @@ const initialState = {
 // ✅ Register User
 export const register = createAsyncThunk("auth/register", async (userData, thunkAPI) => {
     try {
-        console.log(userData);
-
         const response = await authService.register(userData);
         if (typeof window !== "undefined") {
             localStorage.setItem("user", JSON.stringify(response));
         }
-        // return response;
+        return response;
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response?.data || "Registration failed");
     }
@@ -61,9 +59,6 @@ export const logOut = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
         }
         return null;
     } catch (error) {
-        0
-        console.log(error);
-
         return thunkAPI.rejectWithValue(error.response?.data || "Logout failed");
     }
 });

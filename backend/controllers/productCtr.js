@@ -6,10 +6,6 @@ const BiddingProduct = require("../model/biddingProductModel");
 const cloudinary = require("cloudinary").v2;
 
 const createProduct = asyncHandler(async (req, res) => {
-  console.log("=== CREATE PRODUCT REQUEST ===");
-  console.log("Body:", req.body);
-  console.log("Files:", req.files);
-  console.log("User:", req.user?._id);
 
   const {
     title,
@@ -96,11 +92,8 @@ const createProduct = asyncHandler(async (req, res) => {
     });
 
     await product.save();
-    console.log("Product saved successfully:", product._id);
-    console.log("Sending response:", { success: true, data: product });
     res.status(201).json({ success: true, data: product });
   } catch (error) {
-    console.error("Error creating product:", error.message);
     res.status(500);
     throw new Error("Failed to create product: " + error.message);
   }
@@ -169,6 +162,7 @@ const getAllProductsofUser = asyncHandler(async (req, res) => {
 
       return {
         ...product._doc,
+        currentHighestBid: product.currentHighestBid || 0,
         biddingPrice,
         totalBids
       };
@@ -189,10 +183,13 @@ const getWonProducts = asyncHandler(async (req, res) => {
   const productsWithPrices = await Promise.all(
     wonProducts.map(async (product) => {
       const latestBid = await BiddingProduct.findOne({ product: product._id }).sort("-createdAt");
+      const totalBids = await BiddingProduct.countDocuments({ product: product._id });
       const biddingPrice = latestBid ? latestBid.price : product.price;
       return {
         ...product._doc,
-        biddingPrice, // Adding the price field
+        currentHighestBid: product.currentHighestBid || 0,
+        biddingPrice,
+        totalBids
       };
     })
   );
